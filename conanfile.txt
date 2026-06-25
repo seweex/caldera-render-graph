@@ -1,0 +1,9 @@
+[requires]
+vulkan-memory-allocator/3.3.0
+
+[generators]
+CMakeToolchain
+CMakeDeps
+
+[layout]
+cmake_layout
