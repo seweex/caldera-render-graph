@@ -2,7 +2,7 @@
 #define CALDERA_EXAMPLE_WINDOW_H
 
 #include <memory>
-#include <optional>
+#include <vector>
 
 #include <vulkan/vulkan.hpp>
 
@@ -39,7 +39,12 @@ namespace caldera_example
             void operator()(GLFWwindow* handle) const noexcept;
         };
 
-        [[nodiscard]] bool init();
+    private:
+        [[nodiscard]] static std::unique_ptr<GLFWwindow, Deleter> create_window();
+        [[nodiscard]] static vk::SurfaceKHR create_surface(GLFWwindow* handle, vk::Instance instance);
+
+    public:
+        [[nodiscard]] bool init(Context const& context);
 
         Window() noexcept;
         ~Window() noexcept;
@@ -54,6 +59,10 @@ namespace caldera_example
         [[nodiscard]] bool closing() const noexcept;
 
         std::unique_ptr<GLFWwindow, Deleter> window;
+        vk::SurfaceKHR surface{ VK_NULL_HANDLE };
+
+    private:
+        vk::Instance m_instance{ VK_NULL_HANDLE };
     };
 }
 

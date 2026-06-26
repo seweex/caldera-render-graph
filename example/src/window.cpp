@@ -2,6 +2,7 @@
 #include <window.h>
 
 #include <GLFW/glfw3.h>
+#include <vulkan/vulkan.hpp>
 #include <spdlog/spdlog.h>
 
 namespace caldera_example
@@ -9,6 +10,8 @@ namespace caldera_example
     /* * * * * */
     /* Context */
     /* * * * * */
+
+    Context::Context() noexcept = default;
 
     std::vector<const char*> Context::get_extensions()
     {
@@ -57,6 +60,11 @@ namespace caldera_example
             return VK_NULL_HANDLE;
         }
 
+        if (*instanceVersion < VK_API_VERSION_1_4) {
+            spdlog::error("Vulkan version is below the required version");
+            return VK_NULL_HANDLE;
+        }
+
         vk::ApplicationInfo const applicationInfo
         {
             "Caldera Example",
@@ -75,7 +83,13 @@ namespace caldera_example
         };
 
         auto const instance = vk::createInstance(createInfo);
-        return instance.has_value() ? *instance : VK_NULL_HANDLE;
+
+        if (!instance.has_value()) {
+            spdlog::error("Failed to create an instance: {}", vk::to_string(instance.result));
+            return VK_NULL_HANDLE;
+        }
+
+        return *instance;
     }
 
     bool Context::init()
@@ -91,8 +105,6 @@ namespace caldera_example
         return true;
     }
 
-    Context::Context() noexcept = default;
-
     Context::~Context() noexcept
     {
         instance.destroy();
@@ -103,20 +115,53 @@ namespace caldera_example
     /* Window */
     /* * * *  */
 
+    Window::Window() noexcept = default;
+
+    std::unique_ptr<GLFWwindow, Window::Deleter> Window::create_window()
+    {
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+        auto const handle = glfwCreateWindow(1024, 576, "Caldera Example", nullptr, nullptr);
+
+        return { handle, Deleter{} };
+    }
+
+    vk::SurfaceKHR Window::create_surface(GLFWwindow* const handle, vk::Instance const instance)
+    {
+        VkSurfaceKHR surface;
+        auto const result = glfwCreateWindowSurface(instance, handle, nullptr, &surface);
+
+        if (result < 0)
+        {
+            spdlog::error("Failed to create window surface: {}",
+                vk::to_string(static_cast<vk::Result>(result)));
+
+            return VK_NULL_HANDLE;
+        }
+
+        return surface;
+    }
+
     void Window::Deleter::operator()(GLFWwindow* const handle) const noexcept
     {
         glfwDestroyWindow(handle);
     }
 
-    bool Window::init()
+    bool Window::init(Context const& context)
     {
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-        auto const handle = glfwCreateWindow(1024, 576, "Caldera Example", nullptr, nullptr);
+        auto newWindow = create_window();
 
-        if (!handle)
+        if (!newWindow)
             return false;
 
-        window = std::unique_ptr<GLFWwindow, Deleter>{ handle, Deleter{} };
+        auto const newSurface = create_surface(newWindow.get(), context.instance);
+
+        if (!newSurface)
+            return false;
+
+        window = std::move(newWindow);
+        surface = newSurface;
+        m_instance = context.instance;
+
         return true;
     }
 
@@ -131,6 +176,8 @@ namespace caldera_example
         return glfwWindowShouldClose(window.get());
     }
 
-    Window::Window() noexcept = default;
-    Window::~Window() noexcept = default;
+    Window::~Window() noexcept {
+        if (surface)
+            m_instance.destroySurfaceKHR(surface);
+    }
 }

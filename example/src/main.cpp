@@ -7,7 +7,7 @@ int main()
     caldera_example::Context ctx;
     caldera_example::Window wnd;
 
-    if (!ctx.init() || !wnd.init())
+    if (!ctx.init() || !wnd.init(ctx))
         return 1;
 
     while (!wnd.closing())
