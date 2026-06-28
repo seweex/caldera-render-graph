@@ -111,29 +111,70 @@ namespace caldera_example
         return *swapchain;
     }
 
+    std::vector<vk::ImageView> Swapchain::create_views(
+        vk::Device const device,
+        std::vector<vk::Image> const& images,
+        vk::Format const format)
+    {
+        std::vector<vk::ImageView> result;
+        result.reserve(images.size());
+
+        for (auto const image : images)
+        {
+            vk::ImageViewCreateInfo const createInfo
+            {
+                vk::ImageViewCreateFlags{},
+                image,
+                vk::ImageViewType::e2D,
+                format,
+                vk::ComponentMapping{},
+                vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 },
+            };
+
+            auto const newView = device.createImageView(createInfo);
+
+            if (!newView.has_value())
+            {
+                spdlog::error("Failed to create image view: {}", vk::to_string(newView.result));
+
+                for (auto const view : result)
+                    device.destroyImageView(view);
+
+                return {};
+            }
+
+            result.push_back(*newView);
+        }
+
+        return result;
+    }
+
     bool Swapchain::init(Device const& device, Window const& window)
     {
         auto const config = choose_configuration(device.physicalDevice, window.surface);
+        if (!config.has_value()) return false;
 
-        if (!config.has_value())
-            return false;
-
-        auto const newSwapchain = create_swapchain(
-            device.device, device.queueFamilyIndex, window.surface, *config);
-
-        if (!newSwapchain)
-            return false;
+        auto const newSwapchain = create_swapchain(device.device, device.queueFamilyIndex, window.surface, *config);
+        if (!newSwapchain) return false;
 
         auto newImages = device.device.getSwapchainImagesKHR(newSwapchain);
 
-        if (!newImages.has_value())
-        {
+        if (!newImages.has_value()) {
+            device.device.destroySwapchainKHR(newSwapchain);
             spdlog::error("Failed to get swapchain images: {}", vk::to_string(newImages.result));
+            return false;
+        }
+
+        auto newViews = create_views(device.device, *newImages, config->format);
+
+        if (newViews.empty()) {
+            device.device.destroySwapchainKHR(newSwapchain);
             return false;
         }
 
         swapchain = newSwapchain;
         images = std::move(newImages.value);
+        imageViews = std::move(newViews);
         m_device = device.device;
 
         return true;
@@ -143,6 +184,11 @@ namespace caldera_example
 
     Swapchain::~Swapchain() noexcept {
         if (m_device)
+        {
+            for (auto const view : imageViews)
+                m_device.destroyImageView(view);
+
             m_device.destroySwapchainKHR(swapchain);
+        }
     }
 }
