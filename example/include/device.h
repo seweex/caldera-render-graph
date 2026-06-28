@@ -1,12 +1,13 @@
 #ifndef CALDERA_EXAMPLE_DEVICE_H
 #define CALDERA_EXAMPLE_DEVICE_H
 
-#include <window.h>
-
 #include <vulkan/vulkan.hpp>
 
 namespace caldera_example
 {
+    struct Context;
+    struct Window;
+
     struct Device
     {
     private:

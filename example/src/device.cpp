@@ -1,5 +1,6 @@
 
 #include <device.h>
+#include <window.h>
 
 #include <cmath>
 #include <vector>

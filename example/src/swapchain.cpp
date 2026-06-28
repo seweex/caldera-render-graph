@@ -1,9 +1,9 @@
 
 #include <swapchain.h>
+#include <device.h>
+#include <window.h>
 
 #include <spdlog/spdlog.h>
-
-#include "device.h"
 
 namespace caldera_example
 {
