@@ -36,6 +36,8 @@ namespace caldera_example
 
         vk::PhysicalDevice physicalDevice{ VK_NULL_HANDLE };
         vk::Device device{ VK_NULL_HANDLE };
+
+        uint32_t queueFamilyIndex;
     };
 }
 

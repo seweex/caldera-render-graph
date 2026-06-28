@@ -5,7 +5,8 @@ find_package(spdlog REQUIRED)
 add_executable(caldera-example
         src/main.cpp
         src/window.cpp
-        src/device.cpp)
+        src/device.cpp
+        src/swapchain.cpp)
 
 target_include_directories(caldera-example PRIVATE include)
 target_link_libraries(caldera-example PRIVATE

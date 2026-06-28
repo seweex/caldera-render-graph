@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <vector>
+#include <array>
 #include <spdlog/spdlog.h>
 
 namespace caldera_example
@@ -149,6 +150,10 @@ namespace caldera_example
         vk::PhysicalDeviceVulkan14Features deviceFeatures14;
         deviceFeatures14.pushDescriptor = vk::True;
 
+        constexpr std::array deviceExtensions = {
+            VK_KHR_SWAPCHAIN_EXTENSION_NAME
+        };
+
         const vk::StructureChain <
             vk::DeviceCreateInfo,
             vk::PhysicalDeviceVulkan13Features,
@@ -159,6 +164,7 @@ namespace caldera_example
                 vk::DeviceCreateFlags{},
                 1, &queueCreateInfo,
                 0, nullptr,
+                deviceExtensions.size(), deviceExtensions.data()
             },
             deviceFeatures13,
             deviceFeatures14
@@ -188,6 +194,7 @@ namespace caldera_example
 
         physicalDevice = newPhysicalDevice->device;
         device = newDevice;
+        queueFamilyIndex = newPhysicalDevice->family;
 
         return true;
     }
