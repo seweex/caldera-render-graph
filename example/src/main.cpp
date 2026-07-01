@@ -4,6 +4,7 @@
 #include <window.h>
 #include <device.h>
 #include <swapchain.h>
+#include <frame.h>
 
 int main()
 {
@@ -11,8 +12,9 @@ int main()
     caldera_example::Window wnd;
     caldera_example::Device dvc;
     caldera_example::Swapchain swp;
+    caldera_example::FrameContext fmc;
 
-    if (!ctx.init() || !wnd.init(ctx) || !dvc.init(ctx, wnd) || !swp.init(dvc, wnd))
+    if (!ctx.init() || !wnd.init(ctx) || !dvc.init(ctx, wnd) || !swp.init(dvc, wnd) || !fmc.init(dvc))
         return 1;
 
     while (!wnd.closing())

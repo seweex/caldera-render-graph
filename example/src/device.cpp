@@ -144,6 +144,9 @@ namespace caldera_example
             1, &priority
         };
 
+        vk::PhysicalDeviceVulkan12Features deviceFeatures12;
+        deviceFeatures12.timelineSemaphore = vk::True;
+
         vk::PhysicalDeviceVulkan13Features deviceFeatures13;
         deviceFeatures13.dynamicRendering = vk::True;
         deviceFeatures13.synchronization2 = vk::True;
@@ -155,11 +158,8 @@ namespace caldera_example
             VK_KHR_SWAPCHAIN_EXTENSION_NAME
         };
 
-        const vk::StructureChain <
-            vk::DeviceCreateInfo,
-            vk::PhysicalDeviceVulkan13Features,
-            vk::PhysicalDeviceVulkan14Features>
-        deviceCreateInfo {
+        vk::StructureChain const deviceCreateInfo
+        {
             vk::DeviceCreateInfo
             {
                 vk::DeviceCreateFlags{},
@@ -167,6 +167,7 @@ namespace caldera_example
                 0, nullptr,
                 deviceExtensions.size(), deviceExtensions.data()
             },
+            deviceFeatures12,
             deviceFeatures13,
             deviceFeatures14
         };
