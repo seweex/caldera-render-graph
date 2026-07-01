@@ -151,44 +151,60 @@ namespace caldera_example
 
     bool Swapchain::init(Device const& device, Window const& window)
     {
-        auto const config = choose_configuration(device.physicalDevice, window.surface);
-        if (!config.has_value()) return false;
+        auto const configChoice = choose_configuration(device.physicalDevice, window.surface);
 
-        auto const newSwapchain = create_swapchain(device.device, device.queueFamilyIndex, window.surface, *config);
-        if (!newSwapchain) return false;
+        m_device = device.device;
+        configuration = *configChoice;
 
-        auto newImages = device.device.getSwapchainImagesKHR(newSwapchain);
+        if (!configChoice.has_value())
+            return false;
 
-        if (!newImages.has_value()) {
-            device.device.destroySwapchainKHR(newSwapchain);
+        if (!(swapchain = create_swapchain(device.device, device.queueFamilyIndex, window.surface, *configChoice)))
+        {
+            clear();
+            return false;
+        }
+
+        if (auto newImages = device.device.getSwapchainImagesKHR(swapchain);
+            !newImages.has_value())
+        {
+            clear();
             spdlog::error("Failed to get swapchain images: {}", vk::to_string(newImages.result));
             return false;
         }
-
-        auto newViews = create_views(device.device, *newImages, config->format);
-
-        if (newViews.empty()) {
-            device.device.destroySwapchainKHR(newSwapchain);
-            return false;
+        else {
+            images = std::move(newImages.value);
         }
 
-        swapchain = newSwapchain;
-        images = std::move(newImages.value);
-        imageViews = std::move(newViews);
-        m_device = device.device;
+        if ((imageViews = create_views(device.device, images, configChoice->format)).empty())
+        {
+            clear();
+            return false;
+        }
 
         return true;
     }
 
-    Swapchain::Swapchain() noexcept = default;
-
-    Swapchain::~Swapchain() noexcept {
+    void Swapchain::clear() noexcept
+    {
         if (m_device)
         {
             for (auto const view : imageViews)
                 m_device.destroyImageView(view);
 
             m_device.destroySwapchainKHR(swapchain);
+
+            imageViews.clear();
+            images.clear();
+
+            swapchain = VK_NULL_HANDLE;
+            m_device = VK_NULL_HANDLE;
         }
+    }
+
+    Swapchain::Swapchain() noexcept = default;
+
+    Swapchain::~Swapchain() noexcept {
+        clear();
     }
 }

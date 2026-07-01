@@ -30,7 +30,7 @@ namespace caldera_example
         Context(Context const&) = delete;
         Context& operator=(Context const&) = delete;
 
-        vk::Instance instance{ VK_NULL_HANDLE };
+        vk::Instance instance;
     };
 
     struct Window
@@ -45,6 +45,7 @@ namespace caldera_example
 
     public:
         [[nodiscard]] bool init(Context const& context);
+        void clear() noexcept;
 
         Window() noexcept;
         ~Window() noexcept;
@@ -58,11 +59,12 @@ namespace caldera_example
         static void poll_events() noexcept;
         [[nodiscard]] bool closing() const noexcept;
 
-        std::unique_ptr<GLFWwindow, Deleter> window;
-        vk::SurfaceKHR surface{ VK_NULL_HANDLE };
-
     private:
-        vk::Instance m_instance{ VK_NULL_HANDLE };
+        vk::Instance m_instance;
+
+    public:
+        std::unique_ptr<GLFWwindow, Deleter> window;
+        vk::SurfaceKHR surface;
     };
 }
 

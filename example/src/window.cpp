@@ -165,6 +165,18 @@ namespace caldera_example
         return true;
     }
 
+    void Window::clear() noexcept
+    {
+        if (m_instance)
+        {
+            m_instance.destroySurfaceKHR(surface);
+            window = nullptr;
+
+            surface = VK_NULL_HANDLE;
+            m_instance = VK_NULL_HANDLE;
+        }
+    }
+
     void Window::poll_events() noexcept
     {
         glfwPollEvents();

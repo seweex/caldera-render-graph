@@ -184,26 +184,34 @@ namespace caldera_example
 
     bool Device::init(Context const& context, Window const& window)
     {
-        auto const newPhysicalDevice = choose_device(context, window);
+        auto const deviceChoice = choose_device(context, window);
 
-        if (!newPhysicalDevice)
+        if (!deviceChoice)
             return false;
 
-        auto const newDevice = create_device(*newPhysicalDevice);
+        physicalDevice = deviceChoice->device;
+        queueFamilyIndex = deviceChoice->family;
 
-        if (!newDevice)
+        if (!(device = create_device(*deviceChoice)))
             return false;
-
-        physicalDevice = newPhysicalDevice->device;
-        device = newDevice;
-        queueFamilyIndex = newPhysicalDevice->family;
 
         return true;
+    }
+
+    void Device::clear() noexcept
+    {
+        if (device)
+        {
+            device.destroy();
+
+            device = VK_NULL_HANDLE;
+            physicalDevice = VK_NULL_HANDLE;
+        }
     }
 
     Device::Device() noexcept = default;
 
     Device::~Device() noexcept {
-        device.destroy();
+        clear();
     }
 }

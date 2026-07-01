@@ -25,6 +25,7 @@ namespace caldera_example
 
     public:
         [[nodiscard]] bool init(Context const& context, Window const& window);
+        void clear() noexcept;
 
         Device(Device &&) = delete;
         Device& operator=(Device &&) = delete;
@@ -35,8 +36,8 @@ namespace caldera_example
         Device() noexcept;
         ~Device() noexcept;
 
-        vk::PhysicalDevice physicalDevice{ VK_NULL_HANDLE };
-        vk::Device device{ VK_NULL_HANDLE };
+        vk::PhysicalDevice physicalDevice;
+        vk::Device device;
 
         uint32_t queueFamilyIndex;
     };

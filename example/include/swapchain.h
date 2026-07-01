@@ -34,6 +34,7 @@ namespace caldera_example
 
     public:
         [[nodiscard]] bool init(Device const& device, Window const& window);
+        void clear() noexcept;
 
         Swapchain() noexcept;
         ~Swapchain() noexcept;
@@ -44,14 +45,15 @@ namespace caldera_example
         Swapchain(Swapchain const&) = delete;
         Swapchain& operator=(Swapchain const&) = delete;
 
-        vk::SwapchainKHR swapchain{ VK_NULL_HANDLE };
+    private:
+        vk::Device m_device;
+
+    public:
+        vk::SwapchainKHR swapchain;
         Configuration configuration;
 
         std::vector<vk::Image> images;
         std::vector<vk::ImageView> imageViews;
-
-    private:
-        vk::Device m_device{ VK_NULL_HANDLE };
     };
 }
 
