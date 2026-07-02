@@ -1,6 +1,8 @@
 #ifndef CALDERA_EXAMPLE_FRAME_H
 #define CALDERA_EXAMPLE_FRAME_H
 
+#include <array>
+
 #include <vulkan/vulkan.hpp>
 
 namespace caldera_example
@@ -54,10 +56,13 @@ namespace caldera_example
         FrameManager(FrameManager const&) = delete;
         FrameManager& operator=(FrameManager const&) = delete;
 
-        [[nodiscard]] bool init(Device const& device, Swapchain const& swapchain);
+        [[nodiscard]] bool init(Device const& device);
         void clear() noexcept;
 
-        std::vector<FrameContext> frames;
+        void advance() noexcept;
+
+        std::array<FrameContext, 3> frames;
+        uint32_t currentFrame;
     };
 }
 

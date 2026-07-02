@@ -158,23 +158,26 @@ namespace caldera_example
     /* * * * * * * * */
 
     FrameManager::FrameManager() noexcept = default;
+    FrameManager::~FrameManager() noexcept = default;
 
-    FrameManager::~FrameManager() noexcept {
-        clear();
-    }
-
-    bool FrameManager::init(Device const& device, Swapchain const& swapchain)
+    bool FrameManager::init(Device const& device)
     {
-        frames.resize(swapchain.images.size());
-
         for (auto& frame : frames)
             if (!frame.init(device))
                 return false;
 
+        currentFrame = 0;
+
         return true;
     }
 
-    void FrameManager::clear() noexcept {
-        frames.clear();
+    void FrameManager::clear() noexcept
+    {
+        for (auto& frame : frames)
+            frame.clear();
+    }
+
+    void FrameManager::advance() noexcept {
+        currentFrame = (currentFrame + 1) % frames.size();
     }
 }
