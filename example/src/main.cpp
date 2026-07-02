@@ -12,9 +12,9 @@ int main()
     caldera_example::Window wnd;
     caldera_example::Device dvc;
     caldera_example::Swapchain swp;
-    caldera_example::FrameContext fmc;
+    caldera_example::FrameManager fmg;
 
-    if (!ctx.init() || !wnd.init(ctx) || !dvc.init(ctx, wnd) || !swp.init(dvc, wnd) || !fmc.init(dvc))
+    if (!ctx.init() || !wnd.init(ctx) || !dvc.init(ctx, wnd) || !swp.init(dvc, wnd) || !fmg.init(dvc, swp))
         return 1;
 
     while (!wnd.closing())

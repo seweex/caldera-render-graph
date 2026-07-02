@@ -4,8 +4,14 @@
 
 #include <spdlog/spdlog.h>
 
+#include "swapchain.h"
+
 namespace caldera_example
 {
+    /* * * * * * * * */
+    /* Frame Context */
+    /* * * * * * * * */
+
     vk::CommandPool FrameContext::create_pool(vk::Device const device, uint32_t const family)
     {
         vk::CommandPoolCreateInfo const createInfo
@@ -74,6 +80,37 @@ namespace caldera_example
         clear();
     }
 
+    FrameContext::FrameContext(FrameContext&& other) noexcept {
+        *this = std::move(other);
+    }
+
+    FrameContext& FrameContext::operator=(FrameContext&& other) noexcept
+    {
+        if (this == &other) return *this;
+
+        m_device = other.m_device;
+        pool = other.pool;
+        buffer = other.buffer;
+
+        timelineSemaphore = other.timelineSemaphore;
+        timelineValue = other.timelineValue;
+
+        imageAvailableSemaphore = other.imageAvailableSemaphore;
+        renderFinishedSemaphore = other.renderFinishedSemaphore;
+
+        other.m_device = VK_NULL_HANDLE;
+        other.pool = VK_NULL_HANDLE;
+        other.buffer = VK_NULL_HANDLE;
+
+        other.timelineSemaphore = VK_NULL_HANDLE;
+        other.timelineValue = 0;
+
+        other.imageAvailableSemaphore = VK_NULL_HANDLE;
+        other.renderFinishedSemaphore = VK_NULL_HANDLE;
+
+        return *this;
+    }
+
     bool FrameContext::init(Device const& device)
     {
         m_device = device.device;
@@ -114,5 +151,30 @@ namespace caldera_example
 
             m_device = VK_NULL_HANDLE;
         }
+    }
+
+    /* * * * * * * * */
+    /* Frame Manager */
+    /* * * * * * * * */
+
+    FrameManager::FrameManager() noexcept = default;
+
+    FrameManager::~FrameManager() noexcept {
+        clear();
+    }
+
+    bool FrameManager::init(Device const& device, Swapchain const& swapchain)
+    {
+        frames.resize(swapchain.images.size());
+
+        for (auto& frame : frames)
+            if (!frame.init(device))
+                return false;
+
+        return true;
+    }
+
+    void FrameManager::clear() {
+        frames.clear();
     }
 }

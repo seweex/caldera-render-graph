@@ -6,6 +6,7 @@
 namespace caldera_example
 {
     struct Device;
+    struct Swapchain;
 
     struct FrameContext
     {
@@ -19,8 +20,8 @@ namespace caldera_example
         FrameContext() noexcept;
         ~FrameContext() noexcept;
 
-        FrameContext(FrameContext &&) = delete;
-        FrameContext& operator=(FrameContext &&) = delete;
+        FrameContext(FrameContext &&) noexcept;
+        FrameContext& operator=(FrameContext &&) noexcept;
 
         FrameContext(FrameContext const&) = delete;
         FrameContext& operator=(FrameContext const&) = delete;
@@ -40,6 +41,23 @@ namespace caldera_example
 
         vk::Semaphore imageAvailableSemaphore;
         vk::Semaphore renderFinishedSemaphore;
+    };
+
+    struct FrameManager
+    {
+        FrameManager() noexcept;
+        ~FrameManager() noexcept;
+
+        FrameManager(FrameManager &&) = delete;
+        FrameManager& operator=(FrameManager &&) = delete;
+
+        FrameManager(FrameManager const&) = delete;
+        FrameManager& operator=(FrameManager const&) = delete;
+
+        [[nodiscard]] bool init(Device const& device, Swapchain const& swapchain);
+        void clear();
+
+        std::vector<FrameContext> frames;
     };
 }
 
