@@ -144,8 +144,19 @@ namespace caldera_example
             1, &priority
         };
 
+        vk::PhysicalDeviceFeatures2 deviceFeatures;
+        deviceFeatures.features.shaderSampledImageArrayDynamicIndexing = vk::True;
+
         vk::PhysicalDeviceVulkan12Features deviceFeatures12;
         deviceFeatures12.timelineSemaphore = vk::True;
+        deviceFeatures12.descriptorBindingVariableDescriptorCount = vk::True;
+        deviceFeatures12.descriptorBindingPartiallyBound = vk::True;
+        deviceFeatures12.descriptorBindingSampledImageUpdateAfterBind = vk::True;
+        deviceFeatures12.descriptorBindingStorageBufferUpdateAfterBind = vk::True;
+        deviceFeatures12.descriptorBindingStorageImageUpdateAfterBind = vk::True;
+        deviceFeatures12.descriptorBindingUniformBufferUpdateAfterBind = vk::True;
+        deviceFeatures12.shaderInputAttachmentArrayDynamicIndexing = vk::True;
+        deviceFeatures12.runtimeDescriptorArray = vk::True;
 
         vk::PhysicalDeviceVulkan13Features deviceFeatures13;
         deviceFeatures13.dynamicRendering = vk::True;
@@ -167,6 +178,7 @@ namespace caldera_example
                 0, nullptr,
                 deviceExtensions.size(), deviceExtensions.data()
             },
+            deviceFeatures,
             deviceFeatures12,
             deviceFeatures13,
             deviceFeatures14
