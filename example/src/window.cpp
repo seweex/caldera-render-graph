@@ -42,7 +42,24 @@ namespace caldera_example
         return true;
     }
 
-    vk::Instance Context::init_instance()
+    uint32_t Context::get_version()
+    {
+        auto const instanceVersion = vk::enumerateInstanceVersion();
+
+        if (!instanceVersion.has_value()) {
+            spdlog::error("Failed to enumerate vulkan instance version");
+            return 0;
+        }
+
+        if (*instanceVersion < VK_API_VERSION_1_4) {
+            spdlog::error("Vulkan version is below the required version");
+            return 0;
+        }
+
+        return *instanceVersion;
+    }
+
+    vk::Instance Context::init_instance(uint32_t const version)
     {
         constexpr auto layer = "VK_LAYER_KHRONOS_validation";
 
@@ -53,25 +70,13 @@ namespace caldera_example
             return VK_NULL_HANDLE;
         }
 
-        auto const instanceVersion = vk::enumerateInstanceVersion();
-
-        if (!instanceVersion.has_value()) {
-            spdlog::error("Failed to enumerate vulkan instance version");
-            return VK_NULL_HANDLE;
-        }
-
-        if (*instanceVersion < VK_API_VERSION_1_4) {
-            spdlog::error("Vulkan version is below the required version");
-            return VK_NULL_HANDLE;
-        }
-
         vk::ApplicationInfo const applicationInfo
         {
             "Caldera Example",
             0,
             "No engine",
             0,
-            *instanceVersion
+            version
         };
 
         vk::InstanceCreateInfo const createInfo
@@ -94,13 +99,14 @@ namespace caldera_example
 
     bool Context::init()
     {
-        if (!init_glfw())
-            return false;
+        version = get_version();
 
-        if (auto const newInstance = init_instance(); !newInstance)
+        if (!init_glfw() ||
+            version == 0 ||
+            !(instance = init_instance(version)))
+        {
             return false;
-        else
-            instance = newInstance;
+        }
 
         return true;
     }

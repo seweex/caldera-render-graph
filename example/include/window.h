@@ -16,7 +16,8 @@ namespace caldera_example
         [[nodiscard]] static std::vector<const char*> get_extensions();
 
         [[nodiscard]] static bool init_glfw() noexcept;
-        [[nodiscard]] static vk::Instance init_instance();
+        [[nodiscard]] static uint32_t get_version();
+        [[nodiscard]] static vk::Instance init_instance(uint32_t version);
 
     public:
         [[nodiscard]] bool init();
@@ -31,6 +32,7 @@ namespace caldera_example
         Context& operator=(Context const&) = delete;
 
         vk::Instance instance;
+        uint32_t version;
     };
 
     struct Window
