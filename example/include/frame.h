@@ -55,7 +55,7 @@ namespace caldera_example
         FrameManager& operator=(FrameManager const&) = delete;
 
         [[nodiscard]] bool init(Device const& device, Swapchain const& swapchain);
-        void clear();
+        void clear() noexcept;
 
         std::vector<FrameContext> frames;
     };

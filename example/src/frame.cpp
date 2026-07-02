@@ -174,7 +174,7 @@ namespace caldera_example
         return true;
     }
 
-    void FrameManager::clear() {
+    void FrameManager::clear() noexcept {
         frames.clear();
     }
 }
