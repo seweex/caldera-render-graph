@@ -23,6 +23,7 @@ int main()
     caldera_example::Shader fsh;
 
     caldera_example::BindlessLayout lyt;
+    caldera_example::BindlessDescriptors dsc;
 
     if (!ctx.init() ||
         !wnd.init(ctx) ||
@@ -31,7 +32,8 @@ int main()
         !fmg.init(dvc) ||
         !vsh.init(dvc, shader_link_compiled::spv_basic_vert) ||
         !fsh.init(dvc, shader_link_compiled::spv_basic_frag) ||
-        !lyt.init(dvc))
+        !lyt.init(dvc) ||
+        !dsc.init(dvc, lyt))
     {
         return 1;
     }

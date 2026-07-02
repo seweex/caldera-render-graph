@@ -9,6 +9,8 @@ namespace caldera_example
 
     struct BindlessLayout
     {
+        static constexpr uint32_t max_descriptors_count = 100;
+
     private:
         [[nodiscard]] static vk::DescriptorSetLayout create_descriptors_layout(vk::Device device);
 
@@ -34,6 +36,37 @@ namespace caldera_example
     public:
         vk::DescriptorSetLayout descriptorsLayout;
         vk::PipelineLayout pipelineLayout;
+    };
+
+    struct BindlessDescriptors
+    {
+    private:
+        [[nodiscard]] static vk::DescriptorPool create_pool(vk::Device device);
+
+        [[nodiscard]] static vk::DescriptorSet allocate_set(
+            vk::Device device, vk::DescriptorPool pool, vk::DescriptorSetLayout layout);
+
+    public:
+        BindlessDescriptors() noexcept;
+        ~BindlessDescriptors() noexcept;
+
+        BindlessDescriptors(BindlessDescriptors &&) = delete;
+        BindlessDescriptors& operator=(BindlessDescriptors &&) = delete;
+
+        BindlessDescriptors(BindlessDescriptors const&) = delete;
+        BindlessDescriptors& operator=(BindlessDescriptors const&) = delete;
+
+        [[nodiscard]] bool init(Device const& device, BindlessLayout const& layout);
+        void clear() noexcept;
+
+    private:
+        vk::Device m_device;
+
+    public:
+        vk::DescriptorPool pool;
+        vk::DescriptorSet set;
+
+        uint32_t nextFreeSlot;
     };
 }
 
