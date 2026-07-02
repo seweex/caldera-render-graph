@@ -7,7 +7,8 @@ add_executable(caldera-example
         src/window.cpp
         src/device.cpp
         src/swapchain.cpp
-        src/frame.cpp)
+        src/frame.cpp
+        src/shader.cpp)
 
 target_include_directories(caldera-example PRIVATE include)
 target_link_libraries(caldera-example PRIVATE
