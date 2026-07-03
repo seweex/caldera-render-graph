@@ -9,12 +9,14 @@ add_executable(caldera-example
         src/swapchain.cpp
         src/frame.cpp
         src/shader.cpp
-        src/descriptor.cpp)
+        src/descriptor.cpp
+        src/memory.cpp)
 
 target_include_directories(caldera-example PRIVATE include)
 target_link_libraries(caldera-example PRIVATE
         glfw
         Vulkan::Vulkan
+        GPUOpen::VulkanMemoryAllocator
         spdlog::spdlog)
 
 target_compile_features(caldera-example PRIVATE cxx_std_20)

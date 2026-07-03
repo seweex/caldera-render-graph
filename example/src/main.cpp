@@ -1,5 +1,6 @@
 
-#include <iostream>
+#define VMA_IMPLEMENTATION
+#include <vk_mem_alloc.h>
 
 #include <window.h>
 #include <device.h>
@@ -7,6 +8,7 @@
 #include <frame.h>
 #include <shader.h>
 #include <descriptor.h>
+#include <memory.h>
 
 #include <shaders/basic.frag.hpp>
 #include <shaders/basic.vert.hpp>
@@ -25,6 +27,8 @@ int main()
     caldera_example::BindlessLayout lyt;
     caldera_example::BindlessDescriptors dsc;
 
+    caldera_example::Allocator alc;
+
     if (!ctx.init() ||
         !wnd.init(ctx) ||
         !dvc.init(ctx, wnd) ||
@@ -33,7 +37,8 @@ int main()
         !vsh.init(dvc, shader_link_compiled::spv_basic_vert) ||
         !fsh.init(dvc, shader_link_compiled::spv_basic_frag) ||
         !lyt.init(dvc) ||
-        !dsc.init(dvc, lyt))
+        !dsc.init(dvc, lyt) ||
+        !alc.init(ctx, dvc))
     {
         return 1;
     }
