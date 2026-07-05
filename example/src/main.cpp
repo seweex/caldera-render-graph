@@ -10,6 +10,7 @@
 #include <descriptor.h>
 #include <memory.h>
 #include <image.h>
+#include <buffer.h>
 
 #include <shaders/basic.frag.hpp>
 #include <shaders/basic.vert.hpp>
@@ -30,6 +31,7 @@ int main()
 
     caldera_example::Allocator alc;
     caldera_example::Image img;
+    caldera_example::Buffer bfr;
 
     if (!ctx.init() ||
         !wnd.init(ctx) ||
@@ -41,7 +43,8 @@ int main()
         !lyt.init(dvc) ||
         !dsc.init(dvc, lyt) ||
         !alc.init(ctx, dvc) ||
-        !img.init(dvc, alc, { vk::Format::eR8G8B8A8Unorm, { 2048, 2048 }, vk::ImageUsageFlagBits::eSampled }))
+        !img.init(dvc, alc, { vk::Format::eR8G8B8A8Unorm, { 2048, 2048 }, vk::ImageUsageFlagBits::eSampled }) ||
+        !bfr.init(dvc, alc, { 4096, caldera_example::Buffer::MemoryType::gpu_local, vk::BufferUsageFlagBits::eStorageBuffer }))
     {
         return 1;
     }

@@ -11,7 +11,8 @@ add_executable(caldera-example
         src/shader.cpp
         src/descriptor.cpp
         src/memory.cpp
-        src/image.cpp)
+        src/image.cpp
+        src/buffer.cpp)
 
 target_include_directories(caldera-example PRIVATE include)
 target_link_libraries(caldera-example PRIVATE
