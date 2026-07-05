@@ -19,6 +19,8 @@ namespace caldera_example
             vk::Extent2D extent;
         };
 
+        static constexpr vk::Format target_image_format = vk::Format::eB8G8R8A8Srgb;
+
     private:
         static constexpr uint32_t image_count = 3;
         static constexpr vk::ImageUsageFlags image_usage = vk::ImageUsageFlagBits::eColorAttachment;

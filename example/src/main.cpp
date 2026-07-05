@@ -13,6 +13,7 @@
 #include <image.h>
 #include <buffer.h>
 #include <scheduler.h>
+#include <pipeline.h>
 
 #include <shaders/basic.frag.hpp>
 #include <shaders/basic.vert.hpp>
@@ -37,6 +38,8 @@ int main()
     caldera_example::Image img;
     caldera_example::Buffer bfr;
 
+    caldera_example::Pipeline ppl;
+
     if (!ctx.init() ||
         !wnd.init(ctx) ||
         !dvc.init(ctx, wnd) ||
@@ -48,7 +51,8 @@ int main()
         !dsc.init(dvc, lyt) ||
         !alc.init(ctx, dvc) ||
         !img.init(dvc, alc, { vk::Format::eR8G8B8A8Unorm, { 2048, 2048 }, vk::ImageUsageFlagBits::eSampled }) ||
-        !bfr.init(dvc, alc, { 4096, caldera_example::Buffer::MemoryType::gpu_local, vk::BufferUsageFlagBits::eStorageBuffer }))
+        !bfr.init(dvc, alc, { 4096, caldera_example::Buffer::MemoryType::gpu_local, vk::BufferUsageFlagBits::eStorageBuffer }) ||
+        !ppl.init(wnd, dvc, lyt, vsh, fsh))
     {
         return 1;
     }
@@ -60,7 +64,7 @@ int main()
         if (!sch.begin_frame(swp))
             return 1;
 
-        spdlog::info("Passed a frame");
+
 
         if (!sch.end_frame(swp))
             return 1;

@@ -7,6 +7,12 @@ namespace caldera_example
 {
     struct Device;
 
+    struct LayoutProxy
+    {
+        vk::DescriptorSetLayout descriptorsLayout;
+        vk::PipelineLayout pipelineLayout;
+    };
+
     struct BindlessLayout
     {
         static constexpr uint32_t max_descriptors_count = 100;
@@ -29,6 +35,8 @@ namespace caldera_example
 
         [[nodiscard]] bool init(Device const& device);
         void clear() noexcept;
+
+        [[nodiscard]] operator LayoutProxy() const noexcept;
 
     private:
         vk::Device m_device;

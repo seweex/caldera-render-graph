@@ -102,6 +102,14 @@ namespace caldera_example
         }
     }
 
+    BindlessLayout::operator LayoutProxy() const noexcept
+    {
+        return LayoutProxy {
+            descriptorsLayout,
+            pipelineLayout
+        };
+    }
+
     /* * * * * * * * * * *  */
     /* Bindless Descriptors */
     /* * * * * * * * * * *  */

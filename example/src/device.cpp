@@ -166,7 +166,8 @@ namespace caldera_example
         deviceFeatures14.pushDescriptor = vk::True;
 
         constexpr std::array deviceExtensions = {
-            VK_KHR_SWAPCHAIN_EXTENSION_NAME
+            VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+            VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME
         };
 
         vk::StructureChain const deviceCreateInfo

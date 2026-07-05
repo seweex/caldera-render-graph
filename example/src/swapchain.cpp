@@ -16,7 +16,7 @@ namespace caldera_example
         vk::SurfaceKHR const surface)
     {
         Configuration result;
-        vk::SurfaceFormatKHR constexpr target_format{ vk::Format::eB8G8R8A8Srgb, vk::ColorSpaceKHR::eSrgbNonlinear };
+        vk::SurfaceFormatKHR constexpr target_format{ target_image_format, vk::ColorSpaceKHR::eSrgbNonlinear };
 
         /* Format & Color space */
 
