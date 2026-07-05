@@ -2,26 +2,30 @@
 #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc.h>
 
+#include <spdlog/spdlog.h>
+
 #include <window.h>
 #include <device.h>
 #include <swapchain.h>
-#include <frame.h>
 #include <shader.h>
 #include <descriptor.h>
 #include <memory.h>
 #include <image.h>
 #include <buffer.h>
+#include <scheduler.h>
 
 #include <shaders/basic.frag.hpp>
 #include <shaders/basic.vert.hpp>
 
 int main()
 {
+    spdlog::set_level(spdlog::level::info);
+
     caldera_example::Context ctx;
     caldera_example::Window wnd;
     caldera_example::Device dvc;
     caldera_example::Swapchain swp;
-    caldera_example::FrameManager fmg;
+    caldera_example::Scheduler sch;
 
     caldera_example::Shader vsh;
     caldera_example::Shader fsh;
@@ -37,7 +41,7 @@ int main()
         !wnd.init(ctx) ||
         !dvc.init(ctx, wnd) ||
         !swp.init(dvc, wnd) ||
-        !fmg.init(dvc) ||
+        !sch.init(dvc) ||
         !vsh.init(dvc, shader_link_compiled::spv_basic_vert) ||
         !fsh.init(dvc, shader_link_compiled::spv_basic_frag) ||
         !lyt.init(dvc) ||
@@ -52,6 +56,14 @@ int main()
     while (!wnd.closing())
     {
         caldera_example::Window::poll_events();
+
+        if (!sch.begin_frame(swp))
+            return 1;
+
+        spdlog::info("Passed a frame");
+
+        if (!sch.end_frame(swp))
+            return 0;
     }
 
     return 0;
