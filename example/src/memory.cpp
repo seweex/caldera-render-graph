@@ -15,7 +15,7 @@ namespace caldera_example
 
     std::pair<vk::Image, VmaAllocation> Allocator::create_image(
         vk::ImageCreateInfo const& imageInfo,
-        VmaAllocationCreateInfo const& allocationInfo)
+        VmaAllocationCreateInfo const& allocationInfo) const
     {
         VkImage image;
         VmaAllocation allocation;
@@ -34,7 +34,7 @@ namespace caldera_example
 
     std::pair<vk::Buffer, VmaAllocation> Allocator::create_buffer(
         vk::BufferCreateInfo const& bufferInfo,
-        VmaAllocationCreateInfo const& allocationInfo)
+        VmaAllocationCreateInfo const& allocationInfo) const
     {
         VkBuffer buffer;
         VmaAllocation allocation;

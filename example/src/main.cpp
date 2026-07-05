@@ -9,6 +9,7 @@
 #include <shader.h>
 #include <descriptor.h>
 #include <memory.h>
+#include <image.h>
 
 #include <shaders/basic.frag.hpp>
 #include <shaders/basic.vert.hpp>
@@ -28,6 +29,7 @@ int main()
     caldera_example::BindlessDescriptors dsc;
 
     caldera_example::Allocator alc;
+    caldera_example::Image img;
 
     if (!ctx.init() ||
         !wnd.init(ctx) ||
@@ -38,7 +40,8 @@ int main()
         !fsh.init(dvc, shader_link_compiled::spv_basic_frag) ||
         !lyt.init(dvc) ||
         !dsc.init(dvc, lyt) ||
-        !alc.init(ctx, dvc))
+        !alc.init(ctx, dvc) ||
+        !img.init(dvc, alc, { vk::Format::eR8G8B8A8Unorm, { 2048, 2048 }, vk::ImageUsageFlagBits::eSampled }))
     {
         return 1;
     }

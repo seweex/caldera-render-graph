@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include <vulkan/vulkan.hpp>
+#include <vulkan_include.h>
 
 struct GLFWwindow;
 

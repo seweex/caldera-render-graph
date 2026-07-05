@@ -3,7 +3,7 @@
 
 #include <span>
 
-#include <vulkan/vulkan.hpp>
+#include <vulkan_include.h>
 
 namespace caldera_example
 {

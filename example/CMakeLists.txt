@@ -10,7 +10,8 @@ add_executable(caldera-example
         src/frame.cpp
         src/shader.cpp
         src/descriptor.cpp
-        src/memory.cpp)
+        src/memory.cpp
+        src/image.cpp)
 
 target_include_directories(caldera-example PRIVATE include)
 target_link_libraries(caldera-example PRIVATE
@@ -25,6 +26,11 @@ target_compile_definitions(caldera-example PRIVATE
         VULKAN_HPP_NO_EXCEPTIONS
         SPDLOG_NO_EXCEPTIONS
         GLFW_INCLUDE_VULKAN)
+
+target_precompile_headers(caldera-example
+    PRIVATE
+        <vulkan_include.h>
+)
 
 if(MSVC)
     string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")

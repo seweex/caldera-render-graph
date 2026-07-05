@@ -1,7 +1,7 @@
 #ifndef CALDERA_EXAMPLE_DEVICE_H
 #define CALDERA_EXAMPLE_DEVICE_H
 
-#include <vulkan/vulkan.hpp>
+#include <vulkan_include.h>
 
 namespace caldera_example
 {

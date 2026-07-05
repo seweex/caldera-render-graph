@@ -1,7 +1,7 @@
 #ifndef CALDERA_EXAMPLE_MEMORY_H
 #define CALDERA_EXAMPLE_MEMORY_H
 
-#include <vulkan/vulkan.hpp>
+#include <vulkan_include.h>
 #include <vk_mem_alloc.h>
 
 namespace caldera_example
@@ -24,10 +24,10 @@ namespace caldera_example
         void clear() noexcept;
 
         [[nodiscard]] std::pair<vk::Image, VmaAllocation> create_image(
-            vk::ImageCreateInfo const& imageInfo, VmaAllocationCreateInfo const& allocationInfo);
+            vk::ImageCreateInfo const& imageInfo, VmaAllocationCreateInfo const& allocationInfo) const;
 
         [[nodiscard]] std::pair<vk::Buffer, VmaAllocation> create_buffer(
-            vk::BufferCreateInfo const& bufferInfo, VmaAllocationCreateInfo const& allocationInfo);
+            vk::BufferCreateInfo const& bufferInfo, VmaAllocationCreateInfo const& allocationInfo) const;
 
         VmaAllocator allocator;
     };

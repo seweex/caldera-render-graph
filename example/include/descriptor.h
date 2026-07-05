@@ -1,7 +1,7 @@
 #ifndef CALDERA_EXAMPLE_DESCRIPTOR_H
 #define CALDERA_EXAMPLE_DESCRIPTOR_H
 
-#include <vulkan/vulkan.hpp>
+#include <vulkan_include.h>
 
 namespace caldera_example
 {
