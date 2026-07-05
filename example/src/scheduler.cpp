@@ -23,7 +23,14 @@ namespace caldera_example
         return true;
     }
 
-    void Scheduler::clear() noexcept {
+    void Scheduler::clear() noexcept
+    {
+        if (auto const result = m_queue.waitIdle();
+            result < vk::Result::eSuccess)
+        {
+            spdlog::error("Failed to wait for queue idle: {}", vk::to_string(result));
+        }
+
         m_frameManager.clear();
     }
 

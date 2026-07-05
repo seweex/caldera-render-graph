@@ -95,6 +95,8 @@ namespace caldera_example
     {
         device.destroySemaphore(renderFinishedSemaphore);
         device.destroySemaphore(imageAvailableSemaphore);
+
+        device.freeCommandBuffers(pool, 1, &buffer);
         device.destroyCommandPool(pool);
 
         renderFinishedSemaphore = VK_NULL_HANDLE;
@@ -109,10 +111,15 @@ namespace caldera_example
     /* * * * * * * * */
 
     FrameManager::FrameManager() noexcept = default;
-    FrameManager::~FrameManager() noexcept = default;
+
+    FrameManager::~FrameManager() noexcept {
+        clear();
+    }
 
     bool FrameManager::init(Device const& device)
     {
+        m_device = device.device;
+
         if (!(timelineSemaphore = create_semaphore(device.device, true)))
             return false;
 
@@ -137,6 +144,7 @@ namespace caldera_example
 
             m_device.destroySemaphore(timelineSemaphore);
             timelineSemaphore = VK_NULL_HANDLE;
+            m_device = VK_NULL_HANDLE;
         }
     }
 

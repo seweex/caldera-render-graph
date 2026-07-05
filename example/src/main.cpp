@@ -63,7 +63,7 @@ int main()
         spdlog::info("Passed a frame");
 
         if (!sch.end_frame(swp))
-            return 0;
+            return 1;
     }
 
     return 0;
