@@ -4,7 +4,30 @@
 
 #include <spdlog/spdlog.h>
 
-#include "swapchain.h"
+namespace {
+    vk::Semaphore create_semaphore(vk::Device const device, bool const timeline)
+    {
+        vk::StructureChain const createInfo
+        {
+            vk::SemaphoreCreateInfo {
+                vk::SemaphoreCreateFlags{}
+            },
+            vk::SemaphoreTypeCreateInfo {
+                timeline ? vk::SemaphoreType::eTimeline : vk::SemaphoreType::eBinary, 0
+            }
+        };
+
+        auto const newSemaphore = device.createSemaphore(createInfo.get<vk::SemaphoreCreateInfo>());
+
+        if (!newSemaphore.has_value())
+        {
+            spdlog::error("Failed to create a semaphore: {}", vk::to_string(newSemaphore.result));
+            return VK_NULL_HANDLE;
+        }
+
+        return *newSemaphore;
+    }
+}
 
 namespace caldera_example
 {
@@ -51,106 +74,34 @@ namespace caldera_example
         return std::move(newBuffer->front());
     }
 
-    vk::Semaphore FrameContext::create_semaphore(vk::Device const device, bool const timeline)
-    {
-        vk::StructureChain const createInfo
-        {
-            vk::SemaphoreCreateInfo {
-                vk::SemaphoreCreateFlags{}
-            },
-            vk::SemaphoreTypeCreateInfo {
-                timeline ? vk::SemaphoreType::eTimeline : vk::SemaphoreType::eBinary, 0
-            }
-        };
-
-        auto const newSemaphore = device.createSemaphore(createInfo.get<vk::SemaphoreCreateInfo>());
-
-        if (!newSemaphore.has_value())
-        {
-            spdlog::error("Failed to create a semaphore: {}", vk::to_string(newSemaphore.result));
-            return VK_NULL_HANDLE;
-        }
-
-        return *newSemaphore;
-    }
-
     FrameContext::FrameContext() noexcept = default;
-
-    FrameContext::~FrameContext() noexcept {
-        clear();
-    }
-
-    FrameContext::FrameContext(FrameContext&& other) noexcept {
-        *this = std::move(other);
-    }
-
-    FrameContext& FrameContext::operator=(FrameContext&& other) noexcept
-    {
-        if (this == &other) return *this;
-
-        m_device = other.m_device;
-        pool = other.pool;
-        buffer = other.buffer;
-
-        timelineSemaphore = other.timelineSemaphore;
-        timelineValue = other.timelineValue;
-
-        imageAvailableSemaphore = other.imageAvailableSemaphore;
-        renderFinishedSemaphore = other.renderFinishedSemaphore;
-
-        other.m_device = VK_NULL_HANDLE;
-        other.pool = VK_NULL_HANDLE;
-        other.buffer = VK_NULL_HANDLE;
-
-        other.timelineSemaphore = VK_NULL_HANDLE;
-        other.timelineValue = 0;
-
-        other.imageAvailableSemaphore = VK_NULL_HANDLE;
-        other.renderFinishedSemaphore = VK_NULL_HANDLE;
-
-        return *this;
-    }
+    FrameContext::~FrameContext() noexcept = default;
 
     bool FrameContext::init(Device const& device)
     {
-        m_device = device.device;
-        timelineValue = 0;
-
-        if (!(pool = create_pool(m_device, device.queueFamilyIndex)) ||
-            !(buffer = allocate_buffer(m_device, pool)) ||
-            !(timelineSemaphore = create_semaphore(m_device, true)) ||
-            !(imageAvailableSemaphore = create_semaphore(m_device, false)) ||
-            !(renderFinishedSemaphore = create_semaphore(m_device, false)))
+        if (!(pool = create_pool(device.device, device.queueFamilyIndex)) ||
+            !(buffer = allocate_buffer(device.device, pool)) ||
+            !(imageAvailableSemaphore = create_semaphore(device.device, false)) ||
+            !(renderFinishedSemaphore = create_semaphore(device.device, false)))
         {
-            clear();
+            clear(device.device);
             return false;
         }
 
         return true;
     }
 
-    void FrameContext::clear() noexcept
+    void FrameContext::clear(vk::Device const device) noexcept
     {
-        if (m_device)
-        {
-            m_device.destroySemaphore(renderFinishedSemaphore);
-            m_device.destroySemaphore(imageAvailableSemaphore);
+        device.destroySemaphore(renderFinishedSemaphore);
+        device.destroySemaphore(imageAvailableSemaphore);
+        device.destroyCommandPool(pool);
 
-            m_device.destroySemaphore(timelineSemaphore);
-            m_device.destroyCommandPool();
+        renderFinishedSemaphore = VK_NULL_HANDLE;
+        imageAvailableSemaphore = VK_NULL_HANDLE;
 
-            m_device.freeCommandBuffers(pool, 1, &buffer);
-            m_device.destroyCommandPool(pool);
-
-            renderFinishedSemaphore = VK_NULL_HANDLE;
-            imageAvailableSemaphore = VK_NULL_HANDLE;
-            timelineSemaphore = VK_NULL_HANDLE;
-
-            buffer = VK_NULL_HANDLE;
-            pool = VK_NULL_HANDLE;
-
-            m_device = VK_NULL_HANDLE;
-        }
+        buffer = VK_NULL_HANDLE;
+        pool = VK_NULL_HANDLE;
     }
 
     /* * * * * * * * */
@@ -162,10 +113,16 @@ namespace caldera_example
 
     bool FrameManager::init(Device const& device)
     {
-        for (auto& frame : frames)
-            if (!frame.init(device))
-                return false;
+        if (!(timelineSemaphore = create_semaphore(device.device, true)))
+            return false;
 
+        for (auto& frame : frames)
+            if (!frame.init(device)) {
+                clear();
+                return false;
+            }
+
+        timelineValue = 0;
         currentFrame = 0;
 
         return true;
@@ -173,8 +130,14 @@ namespace caldera_example
 
     void FrameManager::clear() noexcept
     {
-        for (auto& frame : frames)
-            frame.clear();
+        if (m_device)
+        {
+            for (auto& frame : frames)
+                frame.clear(m_device);
+
+            m_device.destroySemaphore(timelineSemaphore);
+            timelineSemaphore = VK_NULL_HANDLE;
+        }
     }
 
     void FrameManager::advance() noexcept {
