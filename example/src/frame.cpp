@@ -148,6 +148,18 @@ namespace caldera_example
         }
     }
 
+    bool FrameManager::reset_current_pool()
+    {
+        if (auto const result = m_device.resetCommandPool(frames[currentFrame].pool);
+            result < vk::Result::eSuccess)
+            {
+                spdlog::error("Failed to reset command pool: {}", vk::to_string(result));
+                return false;
+            }
+
+        return true;
+    }
+
     void FrameManager::advance() noexcept {
         currentFrame = (currentFrame + 1) % frames.size();
     }

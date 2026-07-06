@@ -11,6 +11,14 @@ namespace caldera_example
 
     struct Scheduler
     {
+    private:
+        [[nodiscard]] std::optional<uint32_t> acquire_next_image(vk::SwapchainKHR swapchain);
+        [[nodiscard]] bool present_image(vk::SwapchainKHR swapchain);
+
+        [[nodiscard]] bool wait_previous_frame_timeline();
+        [[nodiscard]] bool submit_commands();
+
+    public:
         Scheduler() noexcept;
         ~Scheduler() noexcept;
 

@@ -52,6 +52,7 @@ namespace caldera_example
         [[nodiscard]] bool init(Device const& device);
         void clear() noexcept;
 
+        [[nodiscard]] bool reset_current_pool();
         void advance() noexcept;
 
     private:

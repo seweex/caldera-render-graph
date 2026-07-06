@@ -64,7 +64,12 @@ int main()
         if (!sch.begin_frame(swp))
             return 1;
 
+        auto const cmd = sch.get_current_command_buffer();
 
+        cmd.begin(vk::CommandBufferBeginInfo{});
+        cmd.end();
+
+        spdlog::info("Passing a frame");
 
         if (!sch.end_frame(swp))
             return 1;
