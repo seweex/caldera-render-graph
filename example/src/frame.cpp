@@ -54,7 +54,7 @@ namespace caldera_example
         return *newPool;
     }
 
-    vk::CommandBuffer FrameContext::allocate_buffer(vk::Device const device, vk::CommandPool const pool)
+    std::vector<vk::CommandBuffer> FrameContext::allocate_buffers(vk::Device const device, vk::CommandPool const pool)
     {
         vk::CommandBufferAllocateInfo const allocateInfo
         {
@@ -63,15 +63,15 @@ namespace caldera_example
             1
         };
 
-        auto const newBuffer = device.allocateCommandBuffers(allocateInfo);
+        auto newBuffers = device.allocateCommandBuffers(allocateInfo);
 
-        if (!newBuffer.has_value())
+        if (!newBuffers.has_value())
         {
-            spdlog::error("Failed to allocate a command buffer: {}", vk::to_string(newBuffer.result));
-            return VK_NULL_HANDLE;
+            spdlog::error("Failed to allocate a command buffer: {}", vk::to_string(newBuffers.result));
+            return {};
         }
 
-        return std::move(newBuffer->front());
+        return std::move(*newBuffers);
     }
 
     FrameContext::FrameContext() noexcept = default;
@@ -80,13 +80,16 @@ namespace caldera_example
     bool FrameContext::init(Device const& device)
     {
         if (!(pool = create_pool(device.device, device.queueFamilyIndex)) ||
-            !(buffer = allocate_buffer(device.device, pool)) ||
+            (buffers = allocate_buffers(device.device, pool)).empty() ||
             !(imageAvailableSemaphore = create_semaphore(device.device, false)) ||
             !(renderFinishedSemaphore = create_semaphore(device.device, false)))
         {
             clear(device.device);
             return false;
         }
+
+        activeBuffer = 0;
+        previousSubmissionTicket = 0;
 
         return true;
     }
@@ -96,13 +99,13 @@ namespace caldera_example
         device.destroySemaphore(renderFinishedSemaphore);
         device.destroySemaphore(imageAvailableSemaphore);
 
-        device.freeCommandBuffers(pool, 1, &buffer);
+        device.freeCommandBuffers(pool, buffers);
         device.destroyCommandPool(pool);
 
         renderFinishedSemaphore = VK_NULL_HANDLE;
         imageAvailableSemaphore = VK_NULL_HANDLE;
 
-        buffer = VK_NULL_HANDLE;
+        buffers.clear();
         pool = VK_NULL_HANDLE;
     }
 
@@ -157,10 +160,13 @@ namespace caldera_example
                 return false;
             }
 
+        frames[currentFrame].activeBuffer = 0;
         return true;
     }
 
-    void FrameManager::advance() noexcept {
+    void FrameManager::advance() noexcept
+    {
+        frames[currentFrame].previousSubmissionTicket = timelineValue;
         currentFrame = (currentFrame + 1) % frames.size();
     }
 }

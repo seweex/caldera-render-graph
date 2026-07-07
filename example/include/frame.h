@@ -14,7 +14,7 @@ namespace caldera_example
     {
     private:
         [[nodiscard]] static vk::CommandPool create_pool(vk::Device device, uint32_t family);
-        [[nodiscard]] static vk::CommandBuffer allocate_buffer(vk::Device device, vk::CommandPool pool);
+        [[nodiscard]] static std::vector<vk::CommandBuffer> allocate_buffers(vk::Device device, vk::CommandPool pool);
 
     public:
         FrameContext() noexcept;
@@ -30,7 +30,10 @@ namespace caldera_example
         void clear(vk::Device device) noexcept;
 
         vk::CommandPool pool;
-        vk::CommandBuffer buffer;
+        std::vector<vk::CommandBuffer> buffers;
+
+        uint32_t activeBuffer;
+        uint64_t previousSubmissionTicket;
 
         vk::Semaphore imageAvailableSemaphore;
         vk::Semaphore renderFinishedSemaphore;

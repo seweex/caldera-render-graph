@@ -93,7 +93,7 @@ namespace caldera_example
         };
 
         vk::CommandBufferSubmitInfo const bufferInfo {
-            currentFrame.buffer
+            currentFrame.buffers[currentFrame.activeBuffer],
         };
 
         vk::SubmitInfo2 const submitInfo
@@ -173,7 +173,9 @@ namespace caldera_example
         return true;
     }
 
-    vk::CommandBuffer Scheduler::get_current_command_buffer() noexcept {
-        return m_frameManager.frames[m_frameManager.currentFrame].buffer;
+    vk::CommandBuffer Scheduler::get_current_command_buffer() noexcept
+    {
+        auto const& frame = m_frameManager.frames[m_frameManager.currentFrame];
+        return frame.buffers[frame.activeBuffer];
     }
 }
