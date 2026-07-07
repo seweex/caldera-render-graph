@@ -41,10 +41,10 @@ namespace caldera_example
 
     bool Scheduler::wait_previous_frame_timeline()
     {
-        if (m_frameManager.timelineValue <= FrameManager::frames_inflight)
-            return true;
+        auto const waitValue = m_frameManager.frames[m_frameManager.currentFrame].previousSubmissionTicket;
 
-        auto const waitValue = m_frameManager.timelineValue - FrameManager::frames_inflight;
+        if (waitValue == 0)
+            return true;
 
         vk::SemaphoreWaitInfo const waitInfo
         {
