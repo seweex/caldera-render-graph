@@ -4,6 +4,7 @@
 
 #include <spdlog/spdlog.h>
 
+#include <queue>
 #include <window.h>
 #include <device.h>
 #include <swapchain.h>
@@ -46,7 +47,7 @@ int main()
         !wnd.init(ctx) ||
         !dvc.init(ctx, wnd) ||
         !swp.init(dvc, wnd) ||
-        !sch.init(dvc, swp, 2) ||
+        !sch.init(dvc, swp, 3) ||
         !vsh.init(dvc, shader_link_compiled::spv_basic_vert) ||
         !fsh.init(dvc, shader_link_compiled::spv_basic_frag) ||
         !lyt.init(dvc) ||
@@ -60,6 +61,9 @@ int main()
         return 1;
     }
 
+    bool firstFrame = true;
+    std::queue<uint64_t> ticketsQueue;
+
     while (!wnd.closing())
     {
         caldera_example::Window::poll_events();
@@ -69,13 +73,122 @@ int main()
 
         spdlog::info("Passing a frame");
 
-        auto const cmd = sch.get_current_command_buffer();
+        /* Copy mesh */
+        if (firstFrame)
+        {
+            /* Vertices */
+
+            auto cmd = sch.get_current_command_buffer();
+            cmd.begin(vk::CommandBufferBeginInfo{});
+
+            auto const stagingMapping = staging.get_constant_mapping();
+            std::memcpy(stagingMapping, caldera_example::cube_vertices.data(), sizeof(caldera_example::cube_vertices));
+
+            vk::BufferCopy2 const verticesRegion { 0, 0, sizeof(caldera_example::cube_vertices) };
+            cmd.copyBuffer2(vk::CopyBufferInfo2{ staging.buffer, cubeVertices.buffer, verticesRegion });
+            cmd.end();
+
+            auto const verticesCopyTicket = sch.submit_current_buffer(0, false);
+            sch.wait_for_ticket(verticesCopyTicket);
+
+            /* Indices */
+
+            cmd = sch.get_current_command_buffer();
+            cmd.begin(vk::CommandBufferBeginInfo{});
+
+            std::memcpy(stagingMapping, caldera_example::cube_indices.data(), sizeof(caldera_example::cube_indices));
+
+            vk::BufferCopy2 const indicesRegion { 0, 0, sizeof(caldera_example::cube_indices) };
+            cmd.copyBuffer2(vk::CopyBufferInfo2{ staging.buffer, cubeIndices.buffer, indicesRegion });
+            cmd.end();
+
+            auto const indicesCopyTicket = sch.submit_current_buffer(0, false);
+            sch.wait_for_ticket(indicesCopyTicket);
+
+            firstFrame = false;
+        }
+
+        auto cmd = sch.get_current_command_buffer();
         cmd.begin(vk::CommandBufferBeginInfo{});
+
+        vk::RenderingAttachmentInfo attachmentInfo;
+        attachmentInfo.imageView = swp.imageViews[sch.currentImage];
+        attachmentInfo.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+        attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
+        attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
+        attachmentInfo.clearValue = vk::ClearColorValue{ 1.f, 1.f, 0.2f, 0.f };
+
+        vk::ImageMemoryBarrier2 const toWriteBarrier{
+            vk::PipelineStageFlagBits2::eAllCommands,
+            vk::AccessFlagBits2::eNone,
+            vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+            vk::AccessFlagBits2::eColorAttachmentWrite,
+            vk::ImageLayout::eUndefined,
+            vk::ImageLayout::eColorAttachmentOptimal,
+            vk::QueueFamilyIgnored,
+            vk::QueueFamilyIgnored,
+            swp.images[sch.currentImage],
+            vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 }
+        };
+
+        cmd.pipelineBarrier2(vk::DependencyInfo{
+            vk::DependencyFlags{},
+            0, nullptr,
+            0, nullptr,
+            1, &toWriteBarrier
+        });
+
+        cmd.beginRendering(vk::RenderingInfo {
+            vk::RenderingFlags{},
+            vk::Rect2D{ vk::Offset2D{ 0, 0 }, vk::Extent2D{ 1024, 576 } },
+            1, 0,
+            attachmentInfo
+        });
+
+        cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, ppl.pipeline);
+
+        uint64_t constexpr offset = 0;
+        cmd.bindVertexBuffers(0, cubeVertices.buffer, offset);
+        cmd.bindIndexBuffer(cubeIndices.buffer, 0, vk::IndexType::eUint32);
+
+        cmd.endRendering();
+
+        vk::ImageMemoryBarrier2 const toPresentBarrier{
+            vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+            vk::AccessFlagBits2::eColorAttachmentWrite,
+            vk::PipelineStageFlagBits2::eNone,
+            vk::AccessFlagBits2::eNone,
+            vk::ImageLayout::eColorAttachmentOptimal,
+            vk::ImageLayout::ePresentSrcKHR,
+            vk::QueueFamilyIgnored,
+            vk::QueueFamilyIgnored,
+            swp.images[sch.currentImage],
+            vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 }
+        };
+
+        cmd.pipelineBarrier2(vk::DependencyInfo{
+            vk::DependencyFlags{},
+            0, nullptr,
+            0, nullptr,
+            1, &toPresentBarrier
+        });
+
         cmd.end();
 
-        if (!sch.submit_current_buffer(0, true) ||
+        auto const ticket = sch.submit_current_buffer(0, true);
+
+        if (ticket == 0 ||
             !sch.end_frame())
             return 1;
+
+        ticketsQueue.push(ticket);
+        if (ticketsQueue.size() > 3)
+            ticketsQueue.pop();
+    }
+
+    while (!ticketsQueue.empty()) {
+        sch.wait_for_ticket(ticketsQueue.front());
+        ticketsQueue.pop();
     }
 
     return 0;
