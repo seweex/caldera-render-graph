@@ -14,6 +14,7 @@
 #include <buffer.h>
 #include <scheduler.h>
 #include <pipeline.h>
+#include <mesh.h>
 
 #include <shaders/basic.frag.hpp>
 #include <shaders/basic.vert.hpp>
@@ -35,10 +36,11 @@ int main()
     caldera_example::BindlessDescriptors dsc;
 
     caldera_example::Allocator alc;
-    caldera_example::Image img;
-    caldera_example::Buffer bfr;
-
     caldera_example::Pipeline ppl;
+
+    caldera_example::Buffer cubeVertices;
+    caldera_example::Buffer cubeIndices;
+    caldera_example::Buffer staging;
 
     if (!ctx.init() ||
         !wnd.init(ctx) ||
@@ -50,8 +52,9 @@ int main()
         !lyt.init(dvc) ||
         !dsc.init(dvc, lyt) ||
         !alc.init(ctx, dvc) ||
-        !img.init(dvc, alc, { vk::Format::eR8G8B8A8Unorm, { 2048, 2048 }, vk::ImageUsageFlagBits::eSampled }) ||
-        !bfr.init(dvc, alc, { 4096, caldera_example::Buffer::MemoryType::gpu_local, vk::BufferUsageFlagBits::eStorageBuffer }) ||
+        !staging.init(dvc, alc, { sizeof(caldera_example::cube_vertices), caldera_example::Buffer::MemoryType::constantly_mapped, vk::BufferUsageFlagBits::eTransferSrc }) ||
+        !cubeVertices.init(dvc, alc, { sizeof(caldera_example::cube_vertices), caldera_example::Buffer::MemoryType::gpu_local, vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst }) ||
+        !cubeIndices.init(dvc, alc, { sizeof(caldera_example::cube_indices), caldera_example::Buffer::MemoryType::gpu_local, vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst }) ||
         !ppl.init(wnd, dvc, lyt, vsh, fsh))
     {
         return 1;
@@ -65,9 +68,6 @@ int main()
             return 1;
 
         auto const cmd = sch.get_current_command_buffer();
-
-        cmd.begin(vk::CommandBufferBeginInfo{});
-        cmd.end();
 
         spdlog::info("Passing a frame");
 

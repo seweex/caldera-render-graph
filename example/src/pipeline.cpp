@@ -25,13 +25,13 @@ namespace
     {
         return {
             vk::VertexInputAttributeDescription{
-                0, 0, vk::Format::eR32G32B32Sfloat, offsetof(caldera_example::Vertex, posX)
+                0, 0, vk::Format::eR32G32B32Sfloat, offsetof(caldera_example::Vertex, position)
             },
             vk::VertexInputAttributeDescription{
-                1, 0, vk::Format::eR32G32Sfloat, offsetof(caldera_example::Vertex, uvX)
+                1, 0, vk::Format::eR32G32Sfloat, offsetof(caldera_example::Vertex, uv)
             },
             vk::VertexInputAttributeDescription{
-                2, 0, vk::Format::eR32G32B32Sfloat, offsetof(caldera_example::Vertex, normalX)
+                2, 0, vk::Format::eR32G32B32Sfloat, offsetof(caldera_example::Vertex, normal)
             }
         };
     }

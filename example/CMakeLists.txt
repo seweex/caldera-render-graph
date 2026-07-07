@@ -21,7 +21,8 @@ target_link_libraries(caldera-example PRIVATE
         glfw
         Vulkan::Vulkan
         GPUOpen::VulkanMemoryAllocator
-        spdlog::spdlog)
+        spdlog::spdlog
+        glm::glm)
 
 target_compile_features(caldera-example PRIVATE cxx_std_20)
 

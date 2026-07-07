@@ -29,6 +29,7 @@ for examples only:
 
 - [GLFW](https://github.com/glfw/glfw)
 - [spdlog](https://github.com/gabime/spdlog)
+- [glm](https://github.com/g-truc/glm)
 
 ## Building
 
