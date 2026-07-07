@@ -46,7 +46,7 @@ int main()
         !wnd.init(ctx) ||
         !dvc.init(ctx, wnd) ||
         !swp.init(dvc, wnd) ||
-        !sch.init(dvc) ||
+        !sch.init(dvc, swp, 2) ||
         !vsh.init(dvc, shader_link_compiled::spv_basic_vert) ||
         !fsh.init(dvc, shader_link_compiled::spv_basic_frag) ||
         !lyt.init(dvc) ||
@@ -64,14 +64,17 @@ int main()
     {
         caldera_example::Window::poll_events();
 
-        if (!sch.begin_frame(swp))
+        if (!sch.begin_frame())
             return 1;
-
-        auto const cmd = sch.get_current_command_buffer();
 
         spdlog::info("Passing a frame");
 
-        if (!sch.end_frame(swp))
+        auto const cmd = sch.get_current_command_buffer();
+        cmd.begin(vk::CommandBufferBeginInfo{});
+        cmd.end();
+
+        if (!sch.submit_current_buffer(0, true) ||
+            !sch.end_frame())
             return 1;
     }
 

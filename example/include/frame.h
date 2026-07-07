@@ -1,72 +1,36 @@
 #ifndef CALDERA_EXAMPLE_FRAME_H
 #define CALDERA_EXAMPLE_FRAME_H
 
-#include <array>
-
 #include <vulkan_include.h>
 
 namespace caldera_example
 {
-    struct Device;
-    struct Swapchain;
-
-    struct FrameContext
+    struct FrameResources
     {
-    private:
-        [[nodiscard]] static vk::CommandPool create_pool(vk::Device device, uint32_t family);
-        [[nodiscard]] static std::vector<vk::CommandBuffer> allocate_buffers(vk::Device device, vk::CommandPool pool);
+        FrameResources() noexcept;
+        ~FrameResources() noexcept;
 
-    public:
-        FrameContext() noexcept;
-        ~FrameContext() noexcept;
+        FrameResources(FrameResources &&) = delete;
+        FrameResources& operator=(FrameResources &&) = delete;
 
-        FrameContext(FrameContext &&) = delete;
-        FrameContext& operator=(FrameContext &&) = delete;
+        FrameResources(FrameResources const&) = delete;
+        FrameResources& operator=(FrameResources const&) = delete;
 
-        FrameContext(FrameContext const&) = delete;
-        FrameContext& operator=(FrameContext const&) = delete;
+        [[nodiscard]] bool init(
+            vk::Device device,
+            uint32_t family,
+            uint32_t bufferCount);
 
-        [[nodiscard]] bool init(Device const& device);
         void clear(vk::Device device) noexcept;
 
         vk::CommandPool pool;
         std::vector<vk::CommandBuffer> buffers;
 
-        uint32_t activeBuffer;
+        uint32_t activeBufferIndex;
         uint64_t previousSubmissionTicket;
 
         vk::Semaphore imageAvailableSemaphore;
         vk::Semaphore renderFinishedSemaphore;
-    };
-
-    struct FrameManager
-    {
-        static constexpr uint32_t frames_inflight = 3;
-
-        FrameManager() noexcept;
-        ~FrameManager() noexcept;
-
-        FrameManager(FrameManager &&) = delete;
-        FrameManager& operator=(FrameManager &&) = delete;
-
-        FrameManager(FrameManager const&) = delete;
-        FrameManager& operator=(FrameManager const&) = delete;
-
-        [[nodiscard]] bool init(Device const& device);
-        void clear() noexcept;
-
-        [[nodiscard]] bool reset_current_pool();
-        void advance() noexcept;
-
-    private:
-        vk::Device m_device;
-
-    public:
-        vk::Semaphore timelineSemaphore;
-        uint64_t timelineValue;
-
-        std::array<FrameContext, frames_inflight> frames;
-        uint32_t currentFrame;
     };
 }
 

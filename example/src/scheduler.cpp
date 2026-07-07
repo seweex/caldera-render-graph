@@ -4,178 +4,225 @@
 #include <swapchain.h>
 #include <spdlog/spdlog.h>
 
-namespace caldera_example
+namespace
 {
-    std::optional<uint32_t> Scheduler::acquire_next_image(vk::SwapchainKHR swapchain)
+    [[nodiscard]] vk::Semaphore create_timeline_semaphore(vk::Device const device)
     {
-        auto const semaphore = m_frameManager.frames[m_frameManager.currentFrame].imageAvailableSemaphore;
-        auto const image = m_device.acquireNextImageKHR(
-            swapchain, UINT64_MAX, semaphore, VK_NULL_HANDLE);
-
-        if (!image.has_value()) {
-            spdlog::error("Failed to acquire a swapchain image: ", vk::to_string(image.result));
-            return std::nullopt;
-        }
-
-        return *image;
-    }
-
-    bool Scheduler::present_image(vk::SwapchainKHR swapchain)
-    {
-        auto const semaphore = m_frameManager.frames[m_frameManager.currentFrame].renderFinishedSemaphore;
-
-        vk::PresentInfoKHR const presentInfo {
-            1, &semaphore,
-            1, &swapchain, &m_currentImage
-        };
-
-        if (auto const result = m_queue.presentKHR(presentInfo);
-            result < vk::Result::eSuccess)
+        vk::StructureChain const createInfo
         {
-            spdlog::error("Failed to present an image: ", vk::to_string(result));
-            return false;
-        }
-
-        return true;
-    }
-
-    bool Scheduler::wait_previous_frame_timeline()
-    {
-        auto const waitValue = m_frameManager.frames[m_frameManager.currentFrame].previousSubmissionTicket;
-
-        if (waitValue == 0)
-            return true;
-
-        vk::SemaphoreWaitInfo const waitInfo
-        {
-            vk::SemaphoreWaitFlags{},
-            1, &m_frameManager.timelineSemaphore, &waitValue
-        };
-
-        if (auto const result = m_device.waitSemaphores(waitInfo, UINT64_MAX);
-            result < vk::Result::eSuccess)
-        {
-            spdlog::error("Failed to wait for the timeline semaphore: {}", vk::to_string(result));
-            return false;
-        }
-
-        return true;
-    }
-
-    bool Scheduler::submit_commands()
-    {
-        auto const& currentFrame = m_frameManager.frames[m_frameManager.currentFrame];
-
-        vk::SemaphoreSubmitInfo const waitInfo
-        {
-            currentFrame.imageAvailableSemaphore,
-            0,
-            vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-            0
-        };
-
-        std::array const signalInfos
-        {
-            vk::SemaphoreSubmitInfo
-            {
-                currentFrame.renderFinishedSemaphore,
-                0,
-                vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-                0
+            vk::SemaphoreCreateInfo {
+                vk::SemaphoreCreateFlags{}
             },
-            vk::SemaphoreSubmitInfo
-            {
-                m_frameManager.timelineSemaphore,
-                m_frameManager.timelineValue,
-                vk::PipelineStageFlagBits2::eAllCommands,
-                0
+            vk::SemaphoreTypeCreateInfo {
+                vk::SemaphoreType::eTimeline, 0
             }
         };
 
-        vk::CommandBufferSubmitInfo const bufferInfo {
-            currentFrame.buffers[currentFrame.activeBuffer],
-        };
+        auto const newSemaphore = device.createSemaphore(createInfo.get<>());
 
-        vk::SubmitInfo2 const submitInfo
-        {
-            vk::SubmitFlags{},
-            waitInfo,
-            bufferInfo,
-            signalInfos
-        };
-
-        if (auto const result = m_queue.submit2(1, &submitInfo, VK_NULL_HANDLE);
-            result < vk::Result::eSuccess)
-        {
-            spdlog::error("Failed to submit commands: {}", vk::to_string(result));
-            return false;
+        if (!newSemaphore.has_value()) {
+            spdlog::error("Failed to create a semaphore: {}", vk::to_string(newSemaphore.result));
+            return VK_NULL_HANDLE;
         }
+
+        return *newSemaphore;
+    }
+
+    [[nodiscard]] bool init_frames(
+        auto& frames,
+        vk::Device const device,
+        uint32_t const family,
+        uint32_t const buffers)
+    {
+        for (uint32_t i = 0; i < frames.size(); ++i)
+            if (!frames[i].init(device, family, buffers))
+            {
+                for (uint32_t j = 0; j < i; ++j)
+                    frames[j].clear(device);
+
+                return false;
+            }
 
         return true;
     }
+}
 
+namespace caldera_example
+{
     Scheduler::Scheduler() noexcept = default;
 
     Scheduler::~Scheduler() noexcept {
         clear();
     }
 
-    bool Scheduler::init(Device const& device)
+    bool Scheduler::init(
+        Device const& device,
+        Swapchain const& swapchain,
+        uint32_t const commandBuffersPerFrame)
     {
         m_device = device.device;
         m_queue = m_device.getQueue(device.queueFamilyIndex, 0);
+        m_swapchain = swapchain.swapchain;
 
-        if (!m_frameManager.init(device))
+        timelineValue = 0;
+        currentFrame = 0;
+
+        if (!(timelineSemaphore = create_timeline_semaphore(m_device)) ||
+            !init_frames(frames, m_device, device.queueFamilyIndex, commandBuffersPerFrame))
+        {
+            clear();
             return false;
+        }
 
         return true;
     }
 
     void Scheduler::clear() noexcept
     {
-        if (auto const result = m_queue.waitIdle();
-            result < vk::Result::eSuccess)
+        if (m_device)
         {
-            spdlog::error("Failed to wait for queue idle: {}", vk::to_string(result));
-        }
+            for (auto& frame : frames)
+                frame.clear(m_device);
 
-        m_frameManager.clear();
+            m_device.destroySemaphore(timelineSemaphore);
+
+            timelineSemaphore = VK_NULL_HANDLE;
+            m_device = VK_NULL_HANDLE;
+        }
     }
 
-    bool Scheduler::begin_frame(Swapchain const& swapchain)
+    bool Scheduler::begin_frame()
     {
-        ++m_frameManager.timelineValue;
+        auto& frame = frames[currentFrame];
 
-        if (!wait_previous_frame_timeline())
+        /* Wait previous frame */
+        if (!wait_for_ticket(frame.previousSubmissionTicket))
             return false;
 
-        auto const image = acquire_next_image(swapchain.swapchain);
-
-        if (!image.has_value() ||
-            !m_frameManager.reset_current_pool())
+        /* Acquire image */
+        if (auto const result = m_device.acquireNextImageKHR(m_swapchain, UINT64_MAX,
+                frame.imageAvailableSemaphore, VK_NULL_HANDLE, &currentImage);
+            result < vk::Result::eSuccess)
         {
+            spdlog::error("Failed to acquire an image: {}", vk::to_string(result));
             return false;
         }
 
-        m_currentImage = *image;
+        /* Reset used resource */
+        {
+            if (auto const result = m_device.resetCommandPool(frame.pool);
+               result < vk::Result::eSuccess)
+            {
+                spdlog::error("Failed to reset command pool: {}", vk::to_string(result));
+                return false;
+            }
+
+            frame.activeBufferIndex = 0;
+        }
+
         return true;
     }
 
-    bool Scheduler::end_frame(Swapchain const& swapchain)
+    bool Scheduler::end_frame()
     {
-        if (!submit_commands() ||
-            !present_image(swapchain.swapchain))
+        auto& frame = frames[currentFrame];
+
+        /* Present image */
+        if (auto const result = m_queue.presentKHR(
+                vk::PresentInfoKHR{ frame.renderFinishedSemaphore, m_swapchain, currentImage });
+            result < vk::Result::eSuccess)
         {
+            spdlog::error("Failed to present an image: {}", vk::to_string(result));
             return false;
         }
 
-        m_frameManager.advance();
+        /* Advance frame */
+        currentFrame = (currentFrame + 1) % frames_inflight;
+
         return true;
     }
 
     vk::CommandBuffer Scheduler::get_current_command_buffer() noexcept
     {
-        auto const& frame = m_frameManager.frames[m_frameManager.currentFrame];
-        return frame.buffers[frame.activeBuffer];
+        auto const& frame = frames[currentFrame];
+        return frame.buffers[frame.activeBufferIndex];
+    }
+
+    uint64_t Scheduler::submit_current_buffer(uint64_t const ticketToWait, bool const presentAfterIt)
+    {
+        auto const resultTicket = timelineValue + 1;
+        auto& frame = frames[currentFrame];
+
+        std::array<vk::SemaphoreSubmitInfo, 2> waitInfo;
+        std::array<vk::SemaphoreSubmitInfo, 2> signalInfo;
+
+        uint32_t waitCount = 0;
+        uint32_t signalCount = 0;
+
+        if (ticketToWait)
+        {
+            waitInfo[waitCount].stageMask = vk::PipelineStageFlagBits2::eAllCommands;
+            waitInfo[waitCount].semaphore = timelineSemaphore;
+            waitInfo[waitCount].value = ticketToWait;
+            ++waitCount;
+        }
+
+        signalInfo[signalCount].stageMask = vk::PipelineStageFlagBits2::eAllCommands;
+        signalInfo[signalCount].semaphore = timelineSemaphore;
+        signalInfo[signalCount].value = resultTicket;
+        ++signalCount;
+
+        if (presentAfterIt)
+        {
+            waitInfo[waitCount].stageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
+            waitInfo[waitCount].semaphore = frame.imageAvailableSemaphore;
+            ++waitCount;
+
+            signalInfo[signalCount].stageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
+            signalInfo[signalCount].semaphore = frame.renderFinishedSemaphore;
+            ++signalCount;
+
+            frame.previousSubmissionTicket = resultTicket;
+        }
+
+        vk::CommandBufferSubmitInfo const bufferInfo
+            { frame.buffers[frame.activeBufferIndex] };
+
+        vk::SubmitInfo2 const submitInfo {
+            vk::SubmitFlags{},
+            waitCount, waitInfo.data(),
+            1, &bufferInfo,
+            signalCount, signalInfo.data()
+        };
+
+        if (auto const result = m_queue.submit2(submitInfo);
+            result < vk::Result::eSuccess)
+        {
+            spdlog::error("Failed to submit a command buffer: {}", vk::to_string(result));
+            return 0;
+        }
+
+        ++timelineValue;
+        ++frame.activeBufferIndex;
+
+        return resultTicket;
+    }
+
+    bool Scheduler::wait_for_ticket(uint64_t const ticket)
+    {
+        if (ticket == 0)
+            return true;
+
+        vk::SemaphoreWaitInfo const waitInfo
+            { vk::SemaphoreWaitFlags{}, 1, &timelineSemaphore, &ticket };
+
+        if (auto const result = m_device.waitSemaphores(waitInfo, UINT64_MAX);
+            result < vk::Result::eSuccess)
+        {
+            spdlog::error("Failed to wait for semaphore: {}", vk::to_string(result));
+            return false;
+        }
+
+        return true;
     }
 }

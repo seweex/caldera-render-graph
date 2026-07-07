@@ -1,8 +1,10 @@
 #ifndef CALDERA_EXAMPLE_SCHEDULER_H
 #define CALDERA_EXAMPLE_SCHEDULER_H
 
-#include <vulkan_include.h>
 #include <frame.h>
+
+#include <vulkan_include.h>
+#include <array>
 
 namespace caldera_example
 {
@@ -11,14 +13,8 @@ namespace caldera_example
 
     struct Scheduler
     {
-    private:
-        [[nodiscard]] std::optional<uint32_t> acquire_next_image(vk::SwapchainKHR swapchain);
-        [[nodiscard]] bool present_image(vk::SwapchainKHR swapchain);
+        static constexpr uint32_t frames_inflight = 3;
 
-        [[nodiscard]] bool wait_previous_frame_timeline();
-        [[nodiscard]] bool submit_commands();
-
-    public:
         Scheduler() noexcept;
         ~Scheduler() noexcept;
 
@@ -28,20 +24,35 @@ namespace caldera_example
         Scheduler(Scheduler const&) = delete;
         Scheduler& operator=(Scheduler const&) = delete;
 
-        [[nodiscard]] bool init(Device const& device);
+        [[nodiscard]] bool init(
+            Device const& device,
+            Swapchain const& swapchain,
+            uint32_t commandBuffersPerFrame);
+
         void clear() noexcept;
 
-        [[nodiscard]] bool begin_frame(Swapchain const& swapchain);
-        [[nodiscard]] bool end_frame(Swapchain const& swapchain);
+        [[nodiscard]] bool begin_frame();
+        [[nodiscard]] bool end_frame();
 
         [[nodiscard]] vk::CommandBuffer get_current_command_buffer() noexcept;
+        [[nodiscard]] uint64_t submit_current_buffer(uint64_t ticketToWait, bool presentAfterIt);
+
+        [[nodiscard]] bool wait_for_ticket(uint64_t ticket);
 
     private:
         vk::Device m_device;
         vk::Queue m_queue;
 
-        FrameManager m_frameManager;
-        uint32_t m_currentImage;
+        vk::SwapchainKHR m_swapchain;
+
+    public:
+        vk::Semaphore timelineSemaphore;
+        uint64_t timelineValue;
+
+        std::array<FrameResources, frames_inflight> frames;
+
+        uint32_t currentFrame;
+        uint32_t currentImage;
     };
 }
 
