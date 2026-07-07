@@ -62,7 +62,6 @@ int main()
     }
 
     bool firstFrame = true;
-    std::queue<uint64_t> ticketsQueue;
 
     while (!wnd.closing())
     {
@@ -180,16 +179,7 @@ int main()
         if (ticket == 0 ||
             !sch.end_frame())
             return 1;
-
-        ticketsQueue.push(ticket);
-        if (ticketsQueue.size() > 3)
-            ticketsQueue.pop();
     }
 
-    while (!ticketsQueue.empty()) {
-        sch.wait_for_ticket(ticketsQueue.front());
-        ticketsQueue.pop();
-    }
-
-    return 0;
+    return  sch.wait_idle() ? 0 : 1;
 }

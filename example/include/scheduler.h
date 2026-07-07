@@ -38,6 +38,7 @@ namespace caldera_example
         [[nodiscard]] uint64_t submit_current_buffer(uint64_t ticketToWait, bool presentAfterIt);
 
         [[nodiscard]] bool wait_for_ticket(uint64_t ticket);
+        [[nodiscard]] bool wait_idle();
 
     private:
         vk::Device m_device;

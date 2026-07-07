@@ -165,9 +165,13 @@ namespace caldera_example
         vk::PhysicalDeviceVulkan14Features deviceFeatures14;
         deviceFeatures14.pushDescriptor = vk::True;
 
+        vk::PhysicalDeviceSwapchainMaintenance1FeaturesEXT deviceFeatureSM;
+        deviceFeatureSM.swapchainMaintenance1 = vk::True;
+
         constexpr std::array deviceExtensions = {
             VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-            VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME
+            VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME,
+            VK_EXT_SWAPCHAIN_MAINTENANCE_1_EXTENSION_NAME
         };
 
         vk::StructureChain const deviceCreateInfo
@@ -182,7 +186,8 @@ namespace caldera_example
             deviceFeatures,
             deviceFeatures12,
             deviceFeatures13,
-            deviceFeatures14
+            deviceFeatures14,
+            deviceFeatureSM
         };
 
         auto const newDevice = choice.device.createDevice(deviceCreateInfo.get<vk::DeviceCreateInfo>());

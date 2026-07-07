@@ -22,6 +22,21 @@ namespace
         return *newSemaphore;
     }
 
+    [[nodiscard]] vk::Fence create_fence(vk::Device const device)
+    {
+        vk::FenceCreateInfo constexpr createInfo
+            { vk::FenceCreateFlagBits::eSignaled };
+
+        auto const newFence = device.createFence(createInfo);
+
+        if (!newFence.has_value()) {
+            spdlog::error("Failed to create a fence: {}", vk::to_string(newFence.result));
+            return VK_NULL_HANDLE;
+        }
+
+        return *newFence;
+    }
+
     [[nodiscard]] vk::CommandPool create_pool(vk::Device const device, uint32_t const family)
     {
         vk::CommandPoolCreateInfo const createInfo {
@@ -72,7 +87,8 @@ namespace caldera_example
         if (!(pool = create_pool(device, family)) ||
             (buffers = allocate_buffers(device, pool, bufferCount)).empty() ||
             !(imageAvailableSemaphore = create_binary_semaphore(device)) ||
-            !(renderFinishedSemaphore = create_binary_semaphore(device)))
+            !(renderFinishedSemaphore = create_binary_semaphore(device)) ||
+            !(imagePresentedFence = create_fence(device)))
         {
             clear(device);
             return false;
@@ -86,6 +102,7 @@ namespace caldera_example
 
     void FrameResources::clear(vk::Device const device) noexcept
     {
+        device.destroyFence(imagePresentedFence);
         device.destroySemaphore(renderFinishedSemaphore);
         device.destroySemaphore(imageAvailableSemaphore);
         device.destroyCommandPool(pool);
@@ -95,5 +112,6 @@ namespace caldera_example
 
         imageAvailableSemaphore = VK_NULL_HANDLE;
         renderFinishedSemaphore = VK_NULL_HANDLE;
+        imagePresentedFence = VK_NULL_HANDLE;
     }
 }

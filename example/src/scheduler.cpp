@@ -99,6 +99,23 @@ namespace caldera_example
         if (!wait_for_ticket(frame.previousSubmissionTicket))
             return false;
 
+        /* Wait for presentation */
+        {
+            if (auto const result = m_device.waitForFences(frame.imagePresentedFence, vk::True, UINT64_MAX);
+               result < vk::Result::eSuccess)
+            {
+                spdlog::error("Failed to wait for a fence: {}", vk::to_string(result));
+                return false;
+            }
+
+            if (auto const result = m_device.resetFences(frame.imagePresentedFence);
+               result < vk::Result::eSuccess)
+            {
+                spdlog::error("Failed to reset a fence: {}", vk::to_string(result));
+                return false;
+            }
+        }
+
         /* Acquire image */
         if (auto const result = m_device.acquireNextImageKHR(m_swapchain, UINT64_MAX,
                 frame.imageAvailableSemaphore, VK_NULL_HANDLE, &currentImage);
@@ -128,12 +145,23 @@ namespace caldera_example
         auto& frame = frames[currentFrame];
 
         /* Present image */
-        if (auto const result = m_queue.presentKHR(
-                vk::PresentInfoKHR{ frame.renderFinishedSemaphore, m_swapchain, currentImage });
-            result < vk::Result::eSuccess)
         {
-            spdlog::error("Failed to present an image: {}", vk::to_string(result));
-            return false;
+            vk::StructureChain const presentInfo
+            {
+                vk::PresentInfoKHR{
+                    frame.renderFinishedSemaphore, m_swapchain, currentImage
+                },
+                vk::SwapchainPresentFenceInfoEXT {
+                    1, &frame.imagePresentedFence
+                }
+            };
+
+            if (auto const result = m_queue.presentKHR(presentInfo.get());
+                result < vk::Result::eSuccess)
+            {
+                spdlog::error("Failed to present an image: {}", vk::to_string(result));
+                return false;
+            }
         }
 
         /* Advance frame */
@@ -220,6 +248,18 @@ namespace caldera_example
             result < vk::Result::eSuccess)
         {
             spdlog::error("Failed to wait for semaphore: {}", vk::to_string(result));
+            return false;
+        }
+
+        return true;
+    }
+
+    bool Scheduler::wait_idle()
+    {
+        if (auto const result = m_queue.waitIdle();
+            result < vk::Result::eSuccess)
+        {
+            spdlog::error("Failed to wait queue idle: {}", vk::to_string(result));
             return false;
         }
 

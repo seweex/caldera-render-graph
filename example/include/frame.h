@@ -31,6 +31,8 @@ namespace caldera_example
 
         vk::Semaphore imageAvailableSemaphore;
         vk::Semaphore renderFinishedSemaphore;
+
+        vk::Fence imagePresentedFence;
     };
 }
 
