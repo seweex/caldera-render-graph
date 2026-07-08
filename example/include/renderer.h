@@ -2,6 +2,7 @@
 #define CALDERA_EXAMPLE_RENDERER_H
 
 #include <vulkan_include.h>
+#include <glm/fwd.hpp>
 
 namespace caldera_example
 {
@@ -12,6 +13,7 @@ namespace caldera_example
 
         void bind_mesh(vk::Buffer vertices, vk::Buffer indices);
         void bind_material(vk::Pipeline pipeline);
+        void push_constant(vk::PipelineLayout layout, glm::mat4 const& matrix);
 
         void draw();
 

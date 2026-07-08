@@ -142,7 +142,7 @@ namespace
             vk::False,
             vk::PolygonMode::eFill,
             vk::CullModeFlagBits::eBack,
-            vk::FrontFace::eClockwise,
+            vk::FrontFace::eCounterClockwise,
             vk::False,
             0.f,
             0.f,

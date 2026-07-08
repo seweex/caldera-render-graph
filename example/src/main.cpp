@@ -17,6 +17,11 @@
 #include <pipeline.h>
 #include <mesh.h>
 #include <renderer.h>
+#include <GLFW/glfw3.h>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <shaders/basic.frag.hpp>
 #include <shaders/basic.vert.hpp>
@@ -104,8 +109,6 @@ int main()
 
             auto const indicesCopyTicket = sch.submit_current_buffer(0, false);
             sch.wait_for_ticket(indicesCopyTicket);
-
-            firstFrame = false;
         }
 
         auto cmd = sch.get_current_command_buffer();
@@ -116,6 +119,26 @@ int main()
 
         rdr.bind_mesh(cubeVertices.buffer, cubeIndices.buffer);
         rdr.bind_material(ppl.pipeline);
+
+        glm::mat4 model = glm::rotate(
+            glm::mat4(1.0f),
+            static_cast<float>(glfwGetTime()) * glm::radians(45.0f),
+            glm::vec3(0.0f, 1.0f, 0.0f));
+
+        glm::vec3 const target { 0.0f, 0.0f, 0.0f };
+        glm::vec3 const eye = target + glm::vec3(4.5f);
+        glm::vec3 const up{ 0.0f, 1.0f, 0.0f };
+
+        glm::mat4 view = glm::lookAt(eye, target, up);
+
+        float const aspect = static_cast<float>(1024) / static_cast<float>(576);
+        glm::mat4 proj = glm::perspective(glm::radians(35.0f), aspect, 0.1f, 1000.0f);
+
+        proj[1][1] *= -1.0f;
+
+        glm::mat4 const mvpMatrix = proj * view * model;
+
+        rdr.push_constant(lyt.pipelineLayout, mvpMatrix);
 
         rdr.begin();
 
@@ -129,6 +152,8 @@ int main()
         if (ticket == 0 ||
             !sch.end_frame())
             return 1;
+
+        firstFrame = false;
     }
 
     return  sch.wait_idle() ? 0 : 1;

@@ -3,6 +3,7 @@
 
 #include <device.h>
 #include <spdlog/spdlog.h>
+#include <glm/glm.hpp>
 
 namespace caldera_example
 {
@@ -48,7 +49,7 @@ namespace caldera_example
         vk::DescriptorSetLayout const layout)
     {
         vk::PushConstantRange constexpr pushConstantsRange {
-            vk::ShaderStageFlagBits::eFragment, 0, sizeof(uint32_t)
+            vk::ShaderStageFlagBits::eVertex, 0, sizeof(glm::mat4)
         };
 
         vk::PipelineLayoutCreateInfo const createInfo

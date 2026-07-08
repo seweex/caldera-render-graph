@@ -2,6 +2,8 @@
 #include <renderer.h>
 #include <mesh.h>
 
+#include <glm/glm.hpp>
+
 namespace caldera_example
 {
     void Renderer::begin()
@@ -65,7 +67,7 @@ namespace caldera_example
         commandBuffer.pipelineBarrier2(dependencyInfo);
     }
 
-    void Renderer::bind_mesh(vk::Buffer vertices, vk::Buffer indices)
+    void Renderer::bind_mesh(vk::Buffer const vertices, vk::Buffer const indices)
     {
         constexpr uint64_t offset = 0;
 
@@ -73,8 +75,14 @@ namespace caldera_example
         commandBuffer.bindIndexBuffer(indices, 0, vk::IndexType::eUint32);
     }
 
-    void Renderer::bind_material(vk::Pipeline pipeline) {
+    void Renderer::bind_material(vk::Pipeline const pipeline) {
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
+    }
+
+    void Renderer::push_constant(vk::PipelineLayout const layout, glm::mat4 const& matrix)
+    {
+        commandBuffer.pushConstants(
+            layout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(glm::mat4), &matrix);
     }
 
     void Renderer::draw() {
