@@ -16,6 +16,7 @@
 #include <scheduler.h>
 #include <pipeline.h>
 #include <mesh.h>
+#include <renderer.h>
 
 #include <shaders/basic.frag.hpp>
 #include <shaders/basic.vert.hpp>
@@ -110,68 +111,17 @@ int main()
         auto cmd = sch.get_current_command_buffer();
         cmd.begin(vk::CommandBufferBeginInfo{});
 
-        vk::RenderingAttachmentInfo attachmentInfo;
-        attachmentInfo.imageView = swp.imageViews[sch.currentImage];
-        attachmentInfo.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
-        attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
-        attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-        attachmentInfo.clearValue = vk::ClearColorValue{ 1.f, 1.f, 0.2f, 0.f };
+        caldera_example::Renderer rdr{
+            swp.images[sch.currentImage], swp.imageViews[sch.currentImage], cmd };
 
-        vk::ImageMemoryBarrier2 const toWriteBarrier{
-            vk::PipelineStageFlagBits2::eAllCommands,
-            vk::AccessFlagBits2::eNone,
-            vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-            vk::AccessFlagBits2::eColorAttachmentWrite,
-            vk::ImageLayout::eUndefined,
-            vk::ImageLayout::eColorAttachmentOptimal,
-            vk::QueueFamilyIgnored,
-            vk::QueueFamilyIgnored,
-            swp.images[sch.currentImage],
-            vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 }
-        };
+        rdr.bind_mesh(cubeVertices.buffer, cubeIndices.buffer);
+        rdr.bind_material(ppl.pipeline);
 
-        cmd.pipelineBarrier2(vk::DependencyInfo{
-            vk::DependencyFlags{},
-            0, nullptr,
-            0, nullptr,
-            1, &toWriteBarrier
-        });
+        rdr.begin();
 
-        cmd.beginRendering(vk::RenderingInfo {
-            vk::RenderingFlags{},
-            vk::Rect2D{ vk::Offset2D{ 0, 0 }, vk::Extent2D{ 1024, 576 } },
-            1, 0,
-            attachmentInfo
-        });
+        rdr.draw();
 
-        cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, ppl.pipeline);
-
-        uint64_t constexpr offset = 0;
-        cmd.bindVertexBuffers(0, cubeVertices.buffer, offset);
-        cmd.bindIndexBuffer(cubeIndices.buffer, 0, vk::IndexType::eUint32);
-
-        cmd.endRendering();
-
-        vk::ImageMemoryBarrier2 const toPresentBarrier{
-            vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-            vk::AccessFlagBits2::eColorAttachmentWrite,
-            vk::PipelineStageFlagBits2::eNone,
-            vk::AccessFlagBits2::eNone,
-            vk::ImageLayout::eColorAttachmentOptimal,
-            vk::ImageLayout::ePresentSrcKHR,
-            vk::QueueFamilyIgnored,
-            vk::QueueFamilyIgnored,
-            swp.images[sch.currentImage],
-            vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 }
-        };
-
-        cmd.pipelineBarrier2(vk::DependencyInfo{
-            vk::DependencyFlags{},
-            0, nullptr,
-            0, nullptr,
-            1, &toPresentBarrier
-        });
-
+        rdr.end();
         cmd.end();
 
         auto const ticket = sch.submit_current_buffer(0, true);
