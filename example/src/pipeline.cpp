@@ -52,15 +52,6 @@ namespace
         };
     }
 
-    [[nodiscard]] constexpr std::array<vk::DynamicState, 2>
-    create_dynamic_factors() noexcept
-    {
-        return {
-            vk::DynamicState::eViewport,
-            vk::DynamicState::eScissor
-        };
-    }
-
     [[nodiscard]] std::pair<vk::Viewport, vk::Rect2D>
     get_viewport_and_scissors(GLFWwindow* const window) noexcept
     {
@@ -203,15 +194,6 @@ namespace
             { 0.f, 0.f, 0.f, 0.f }
         };
     }
-
-    [[nodiscard]] vk::PipelineDynamicStateCreateInfo
-    create_dynamic_state(std::span<vk::DynamicState const> const factors) noexcept
-    {
-        return {
-            vk::PipelineDynamicStateCreateFlags{},
-            factors
-        };
-    }
 }
 
 namespace caldera_example
@@ -232,12 +214,10 @@ namespace caldera_example
         auto constexpr vertex_input_bindings = create_vertex_input_bindings();
         auto constexpr vertex_input_attributes = create_vertex_input_attributes();
         auto constexpr blend_attachments = create_blend_attachment();
-        auto constexpr dynamic_factors = create_dynamic_factors();
 
         auto const shaderStages = create_shader_stage(vertex.module, fragment.module);
         auto const vertexInputState = create_vertex_input_state(vertex_input_bindings, vertex_input_attributes);
         auto const blendState = create_blend_state(blend_attachments);
-        auto const dynamicState = create_dynamic_state(dynamic_factors);
 
         auto const [viewport, scissors] = get_viewport_and_scissors(window.window.get());
         auto const viewportState = create_viewport_state(viewport, scissors);
@@ -262,7 +242,7 @@ namespace caldera_example
                 &multisample_state,
                 &depth_stencil_state,
                 &blendState,
-                &dynamicState,
+                nullptr,
                 layouts.pipelineLayout,
                 VK_NULL_HANDLE, 0
             },

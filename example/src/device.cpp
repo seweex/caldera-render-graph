@@ -170,7 +170,6 @@ namespace caldera_example
 
         constexpr std::array deviceExtensions = {
             VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-            VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME,
             VK_EXT_SWAPCHAIN_MAINTENANCE_1_EXTENSION_NAME
         };
 
