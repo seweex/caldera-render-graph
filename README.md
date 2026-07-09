@@ -12,6 +12,7 @@ A lightweight and easily extensible library for automatic management of Vulkan b
 - [Building](#-building)
   - [Conan](#2a-via-conan-package-manager)
   - [Manual](#2b-via-manual-package-installation)
+- [Documentation](#-documentation)
 
 ### 🔥 Features
 
@@ -23,6 +24,7 @@ at runtime for transient resource aliasing
 - **O(1) Access:** Fast indexing using lightweight virtual resource's IDs
 - **Exception-Free**: Designed for the best performance in game engines
 - **Zero Dependencies**: The core library depends on Vulkan SDK only
+- **Docs**: The project written with clear **doxygen** documentation 
 
 ### 🚀 Usage
 
@@ -98,7 +100,12 @@ with virtual IDs and record commands
 - Vulkan SDK (1.4+)
 - Conan (2.0+)
 
-#### 3rd Party Software
+For documentations:
+
+- [Doxygen](https://www.doxygen.nl/)
+- [Graphviz](https://graphviz.org/)
+
+### 3rd Party Software
 
 - [Vulkan SDK](https://vulkan.lunarg.com/sdk/home)
 
@@ -150,3 +157,13 @@ cmake --build --preset conan-debug
   cmake --build .  
   ```
 
+## 📄 Documentation
+
+You can easily configure the docs via `doxygen`:
+
+```bash
+doxygen Doxyfile
+```
+
+See for the generated docs in the [doc/html/index.html](doc/html/index.html). 
+Open it with your browser
