@@ -7,6 +7,6 @@ project(caldera
 
 find_package(Vulkan REQUIRED)
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)
-find_package(glm CONFIG REQUIRED)
 
+add_subdirectory(render-graph)
 add_subdirectory(example)

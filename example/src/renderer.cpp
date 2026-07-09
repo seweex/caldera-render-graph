@@ -8,30 +8,12 @@ namespace caldera_example
 {
     void Renderer::begin()
     {
-        vk::ImageMemoryBarrier2 const barrierInfo
-        {
-            vk::PipelineStageFlagBits2::eAllCommands,
-            vk::AccessFlagBits2::eNone,
-            vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-            vk::AccessFlagBits2::eColorAttachmentWrite,
-            vk::ImageLayout::eUndefined,
-            vk::ImageLayout::eColorAttachmentOptimal,
-            vk::QueueFamilyIgnored,
-            vk::QueueFamilyIgnored,
-            image,
-            vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 }
-        };
-
-        vk::DependencyInfo dependencyInfo;
-        dependencyInfo.imageMemoryBarrierCount = 1;
-        dependencyInfo.pImageMemoryBarriers = &barrierInfo;
-
         vk::RenderingAttachmentInfo attachmentInfo;
         attachmentInfo.imageView = view;
         attachmentInfo.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
         attachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
         attachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
-        attachmentInfo.clearValue = vk::ClearColorValue{ 0.f, 0.f, 0.f, 0.f };
+        attachmentInfo.clearValue = vk::ClearColorValue{ 0.8f, 0.6f, 0.7f, 0.f };
 
         vk::RenderingInfo renderingInfo;
         renderingInfo.renderArea = vk::Rect2D{ vk::Offset2D{ 0, 0 }, vk::Extent2D{ 1024, 576 } };
@@ -39,32 +21,11 @@ namespace caldera_example
         renderingInfo.pColorAttachments = &attachmentInfo;
         renderingInfo.layerCount = 1;
 
-        commandBuffer.pipelineBarrier2(dependencyInfo);
         commandBuffer.beginRendering(renderingInfo);
     }
 
-    void Renderer::end()
-    {
-        vk::ImageMemoryBarrier2 const barrierInfo
-        {
-            vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-            vk::AccessFlagBits2::eColorAttachmentWrite,
-            vk::PipelineStageFlagBits2::eNone,
-            vk::AccessFlagBits2::eNone,
-            vk::ImageLayout::eColorAttachmentOptimal,
-            vk::ImageLayout::ePresentSrcKHR,
-            vk::QueueFamilyIgnored,
-            vk::QueueFamilyIgnored,
-            image,
-            vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 }
-        };
-
-        vk::DependencyInfo dependencyInfo;
-        dependencyInfo.imageMemoryBarrierCount = 1;
-        dependencyInfo.pImageMemoryBarriers = &barrierInfo;
-
+    void Renderer::end() {
         commandBuffer.endRendering();
-        commandBuffer.pipelineBarrier2(dependencyInfo);
     }
 
     void Renderer::bind_mesh(vk::Buffer const vertices, vk::Buffer const indices)

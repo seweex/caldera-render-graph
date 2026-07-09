@@ -96,7 +96,7 @@ namespace caldera_example
             1, &family,
             vk::SurfaceTransformFlagBitsKHR::eIdentity,
             vk::CompositeAlphaFlagBitsKHR::eOpaque,
-            vk::PresentModeKHR::eFifo,
+            vk::PresentModeKHR::eMailbox,
             vk::True
         };
 
