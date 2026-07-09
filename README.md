@@ -117,6 +117,7 @@ Used by the *example application* **only**:
 - [GLFW](https://github.com/glfw/glfw)
 - [spdlog](https://github.com/gabime/spdlog)
 - [glm](https://github.com/g-truc/glm)
+- [stb_image](https://github.com/nothings/stb)
 
 ## ⚙️ Building
 

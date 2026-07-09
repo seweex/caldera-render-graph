@@ -3,6 +3,7 @@
 #include <vk_mem_alloc.h>
 
 #include <spdlog/spdlog.h>
+#include <stb_image.h>
 
 #include <queue>
 #include <window.h>

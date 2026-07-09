@@ -25,6 +25,7 @@ target_link_libraries(caldera-example PRIVATE
         GPUOpen::VulkanMemoryAllocator
         spdlog::spdlog
         glm::glm
+        stb-image
         caldera-render-graph)
 
 target_compile_features(caldera-example PRIVATE cxx_std_20)
