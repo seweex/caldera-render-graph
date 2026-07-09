@@ -5,25 +5,83 @@
 
 namespace caldera
 {
+    /// @brief Virtual texture ID
     struct TextureID { uint32_t id; };
+
+    /// @brief Virtual buffer ID
     struct BufferID { uint32_t id; };
 
+    /// @brief Type of texture usage in the Passes
     enum class TextureUsage : uint8_t
     {
+        /**
+         * @brief Specifies a texture as a color attachment
+         * Used in graphic passes
+         */
         color_attachment,
+
+        /**
+         * @brief Specifies a texture as a depth attachment
+         * Used in graphic passes
+         */
         depth_attachment,
+
+        /**
+         * @brief Specifies usage in a shaders
+         * Used in graphic and compute passes
+         */
         shader_usage,
+
+        /**
+         * @brief Specifies a texture as a transfer source or destination
+         * Used in transfer passes
+         */
         transfer,
+
+        /**
+         * @brief Specifies a texture as a present source
+         * Used in graphic passes
+         */
         present
     };
 
+    /// @brief Type of buffer usage in the Passes
     enum class BufferUsage : uint8_t
     {
+        /**
+         * @brief Specifies a buffer as a storage
+         * Used in compute and transfer passes
+         */
         storage,
+
+        /**
+         * @brief Specifies a uniform buffer
+         * Used in compute and graphic passes
+         */
         uniform,
+
+        /**
+         * @brief Specifies a buffer as a vertex input
+         * Used in graphics passes
+         */
         vertex,
+
+        /**
+         * @brief Specifies a buffer as an index input
+         * Used in graphics passes
+         */
         index,
+
+        /**
+         * @brief Specifies a buffer as a transfer source or destination
+         * Used in transfer passes
+         */
         transfer,
+
+        /**
+         * @brief Specifies a buffer as a mapped copy source or destination
+         * Used in transfer passes
+         */
         mapped_usage
     };
 }

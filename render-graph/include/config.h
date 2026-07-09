@@ -8,6 +8,7 @@
 
 /* Forward declarations */
 
+/// @brief Main namespace of 'Calder - Render Graph' project
 namespace caldera
 {
     struct TextureID;
@@ -22,6 +23,7 @@ namespace caldera
     class RenderGraph;
 }
 
+/// @internal
 namespace caldera::detail
 {
     enum class ResourceAccess : uint8_t;

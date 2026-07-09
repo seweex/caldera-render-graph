@@ -1,0 +1,17 @@
+
+PROJECT_NAME            = "Caldera Render Graph"
+PROJECT_NUMBER          = "0.1.0"
+OUTPUT_DIRECTORY        = doc
+
+INPUT                   = render-graph/include
+RECURSIVE               = YES
+USE_MDFILE_AS_MAINPAGE  = README.md
+
+HAVE_DOT                = YES
+CALL_GRAPH              = YES
+CALLER_GRAPH            = YES
+
+GENERATE_LATEX          = NO
+GENERATE_HTML           = YES
+
+INTERNAL_DOCS           = NO
