@@ -104,6 +104,8 @@ For documentations:
 
 - [Doxygen](https://www.doxygen.nl/)
 - [Graphviz](https://graphviz.org/)
+- [doxygen-awesome-css](https://github.com/jothepro/doxygen-awesome-css/tree/main) -
+Improves appearance of docs
 
 ### 3rd Party Software
 
@@ -125,7 +127,7 @@ Go to [official Vulkan SDK source](https://vulkan.lunarg.com/sdk/home) and insta
 ### 1. Clone the repository:
 
 ```bash
-git clone https://github.com/seweex/caldera-render-graph.git
+git clone --recursive https://github.com/seweex/caldera-render-graph.git
 cd caldera-render-graph
 ```
 

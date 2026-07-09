@@ -1,6 +1,7 @@
 .idea
 build
-doc
+doc/html
+doc/latex
 example/shader-sources
 
 CMakeUserPresets.json

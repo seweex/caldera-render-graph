@@ -14,4 +14,8 @@ CALLER_GRAPH            = YES
 GENERATE_LATEX          = NO
 GENERATE_HTML           = YES
 
+HTML_EXTRA_STYLESHEET   = doc/theme/doxygen-awesome-css/doxygen-awesome.css
+HTML_EXTRA_FILES        = doc/theme/doxygen-awesome-css/doxygen-awesome-darkmode-toggle.js
+GENERATE_TREEVIEW       = YES
+
 INTERNAL_DOCS           = NO
