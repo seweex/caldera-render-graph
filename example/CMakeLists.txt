@@ -1,6 +1,7 @@
 
 find_package(glfw3 REQUIRED)
 find_package(spdlog REQUIRED)
+find_package(glm CONFIG REQUIRED)
 
 add_executable(caldera-example
         src/main.cpp
@@ -23,7 +24,8 @@ target_link_libraries(caldera-example PRIVATE
         Vulkan::Vulkan
         GPUOpen::VulkanMemoryAllocator
         spdlog::spdlog
-        glm::glm)
+        glm::glm
+        caldera-render-graph)
 
 target_compile_features(caldera-example PRIVATE cxx_std_20)
 

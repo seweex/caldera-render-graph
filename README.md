@@ -2,36 +2,114 @@
 
 A lightweight and easily extensible library for automatic management of Vulkan barriers and resources
 
-### Features
+![](assets/cube.png)
 
-- Automatic sync barriers generation
-- Simple architecture
-- Exception-free
+### 📋 Content
 
-### Concept
+- [Features](#-features)
+- [Usage](#-usage)
+- [Requirements & Dependencies](#-requirements--dependencies)
+- [Building](#-building)
+  - [Conan](#2a-via-conan-package-manager)
+  - [Manual](#2b-via-manual-package-installation)
 
-1. **Setup Phase**: adding passes and resources
-2. **Compile Phase**: making optimal graph of passes and resource usage
-3. **Execute Phase**: traversing the compiled graph and writing Vulkan command
+### 🔥 Features
 
-### Requirements
+- **Vulkan Sync2 Ready**: Uses modern synchronization tools
+- **Stateless Execution**: The graph is compiled once; transitions are cached as 
+lightweight templates, resulting in near-zero CPU overhead during the execution
+- **Dynamic Resource Association**: Opaque virtual IDs are mapped to physical resources
+at runtime for transient resource aliasing
+- **O(1) Access:** Fast indexing using lightweight virtual resource's IDs
+- **Exception-Free**: Designed for the best performance in game engines
+- **Zero Dependencies**: The core library depends on Vulkan SDK only
+
+### 🚀 Usage
+
+See the full working application in [example/src/main.cpp](example/src/main.cpp)
+
+1. **Setup Phase**: Initialize your resources, declare opaque handles, and create pass nodes
+    ```c++
+    vk::Device device;
+    uint32_t queueFamily;
+    
+    vk::Buffer vertices;
+    vk::DeviceSize verticesSize;
+    
+    vk::Image renderTarget;
+    vk::ImageView renderTargetView;
+    
+    // ^^^ initialize your Vulkan objects ^^^
+    
+    caldera::RenderGraph graph 
+        { device, queueFamily, queueFamily, queueFamily };
+    
+    auto verticesID = graph.declare_buffer(verticesSize);
+    auto targetID = graph.declare_texture(vk::ImageAspectFlagBits::eColor);
+    
+    caldera::PassNode drawPass { "Your draw pass name", caldera::QueueType::graphics };
+    drawPass.read(verticesID, caldera::BufferUsage::vertex);
+    drawPass.write(targetID, caldera::TextureUsage::color_attachment);
+    drawPass.callback([] (vk::CommandBuffer) { /* your draw commands */ });
+    
+    caldera::PassNode presentPass { "Present Pass", caldera::QueueType::graphics };
+    presentPass.read(targetID, caldera::TextureUsage::present);
+    presentPass.callback([] (vk::CommandBuffer) { ... });
+    ```
+
+2. **Compilation Phase**: Add your passes to the graph and compile it. The graph analyzes access
+hazards (RAW, WAW, WAR) and generates barriers automatically
+
+    ```c++
+    // push passes to the graph
+    graph.push_pass(std::move(drawPass));
+    graph.push_pass(std::move(presentPass));
+    
+    // compile the graph
+    graph.compile();
+    ```
+
+3. **Execution Phase**: Inside your frame loop, dynamically associate raw Vulkan handles 
+with virtual IDs and record commands
+
+    ```c++
+    
+    // associate resources to opaque handles
+    graph.associate(verticesID, vertices);
+    graph.associate(targetID, renderTarget, renderTargetView);
+    
+    // execute the graph
+    vk::CommandBuffer cmd;
+    cmd.begin(vk::CommandBufferBeginInfo{});
+    
+    graph.execute(cmd);
+    
+    cmd.end();
+    
+    ```
+
+> Since the graph architecture is completely stateless, `graph.associate(...)` 
+> **doesn't require** recompilation of the graph
+
+### 🛠️ Requirements & Dependencies
 
 - C++20 compiler
 - CMake (3.25+)
 - Vulkan SDK (1.4+)
 - Conan (2.0+)
 
-### Dependencies
+#### 3rd Party Software
+
+- [Vulkan SDK](https://vulkan.lunarg.com/sdk/home)
+
+Used by the *example application* **only**:
 
 - [Vulkan Memory Allocator](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator)
-
-for examples only:
-
 - [GLFW](https://github.com/glfw/glfw)
 - [spdlog](https://github.com/gabime/spdlog)
 - [glm](https://github.com/g-truc/glm)
 
-## Building
+## ⚙️ Building
 
 ### 0. Install Vulkan SDK
 
@@ -44,7 +122,7 @@ git clone https://github.com/seweex/caldera-render-graph.git
 cd caldera-render-graph
 ```
 
-### 2. Via `conan` package manager
+### 2a. Via `conan` package manager
 
 ```bash
 conan install . --output-folder=build --build=missing

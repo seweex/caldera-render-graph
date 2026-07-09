@@ -26,135 +26,253 @@
 #include <shaders/basic.frag.hpp>
 #include <shaders/basic.vert.hpp>
 
+#include <graph.h>
+#include <pass.h>
+
+using namespace caldera;
+using namespace caldera_example;
+
+struct Graphics
+{
+    Context context;
+    Window window;
+    Device device;
+    Swapchain swapchain;
+    Scheduler scheduler;
+
+    BindlessLayout layout;
+    BindlessDescriptors descriptors;
+
+    Pipeline pipeline;
+    Allocator allocator;
+};
+
+struct Resources
+{
+    Shader vertexShader;
+    Shader fragmentShader;
+
+    Buffer stagingBuffer;
+    Buffer cubeVertices;
+    Buffer cubeIndices;
+};
+
+bool initialize(Graphics& graphics, Resources& resources)
+{
+    Buffer::Settings constexpr vertices_settings
+        { sizeof(cube_vertices), Buffer::MemoryType::gpu_local, vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst };
+
+    Buffer::Settings constexpr indices_settings
+        { sizeof(cube_indices), Buffer::MemoryType::gpu_local, vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst };
+
+    Buffer::Settings constexpr staging_settings
+        { vertices_settings.size + indices_settings.size, Buffer::MemoryType::constantly_mapped, vk::BufferUsageFlagBits::eTransferSrc };
+
+    if (!graphics.context.init() ||
+        !graphics.window.init(graphics.context) ||
+        !graphics.device.init(graphics.context, graphics.window) ||
+        !graphics.swapchain.init(graphics.device, graphics.window) ||
+        !graphics.scheduler.init(graphics.device, graphics.swapchain, 1) ||
+        !graphics.layout.init(graphics.device) ||
+        !graphics.descriptors.init(graphics.device, graphics.layout) ||
+        !graphics.allocator.init(graphics.context, graphics.device) ||
+        !resources.vertexShader.init(graphics.device, shader_link_compiled::spv_basic_vert) ||
+        !resources.fragmentShader.init(graphics.device, shader_link_compiled::spv_basic_frag) ||
+        !resources.stagingBuffer.init(graphics.device, graphics.allocator, staging_settings) ||
+        !resources.cubeVertices.init(graphics.device, graphics.allocator, vertices_settings) ||
+        !resources.cubeIndices.init(graphics.device, graphics.allocator, indices_settings) ||
+        !graphics.pipeline.init(graphics.window, graphics.device, graphics.layout, resources.vertexShader, resources.fragmentShader))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+RenderGraph make_load_graph(
+    Graphics const& graphics, Resources& resources)
+{
+    RenderGraph graph {
+        graphics.device.device,
+        graphics.device.queueFamilyIndex,
+        graphics.device.queueFamilyIndex,
+        graphics.device.queueFamilyIndex,
+    };
+
+    auto const stagingBufferID = graph.declare_buffer(sizeof(cube_vertices) + sizeof(cube_indices));
+    auto const cubeVerticesID = graph.declare_buffer(sizeof(cube_vertices));
+    auto const cubeIndicesID = graph.declare_buffer(sizeof(cube_indices));
+
+    graph.associate(stagingBufferID, resources.stagingBuffer.buffer);
+    graph.associate(cubeVerticesID, resources.cubeVertices.buffer);
+    graph.associate(cubeIndicesID, resources.cubeIndices.buffer);
+
+    PassNode stagingPass { "staging-pass", QueueType::transfer };
+    stagingPass.write(stagingBufferID, BufferUsage::mapped_usage);
+    stagingPass.callback([&] (vk::CommandBuffer)
+        {
+            auto mapping = static_cast<std::byte*>(resources.stagingBuffer.get_constant_mapping());
+            std::memcpy(mapping, cube_vertices.data(), sizeof(cube_vertices));
+
+            mapping += sizeof(cube_vertices);
+            std::memcpy(mapping, cube_indices.data(), sizeof(cube_indices));
+        });
+
+    PassNode transferPass { "transfer-pass", QueueType::transfer };
+    transferPass.read(stagingBufferID, BufferUsage::transfer);
+    transferPass.write(cubeVerticesID, BufferUsage::transfer);
+    transferPass.write(cubeIndicesID, BufferUsage::transfer);
+    transferPass.callback([&] (vk::CommandBuffer const cmd)
+        {
+            vk::BufferCopy2 constexpr verticesRegion { 0, 0, sizeof(cube_vertices) };
+            vk::CopyBufferInfo2 const verticesInfo { resources.stagingBuffer.buffer, resources.cubeVertices.buffer, verticesRegion };
+
+            vk::BufferCopy2 constexpr indicesRegion { sizeof(cube_vertices), 0, sizeof(cube_indices) };
+            vk::CopyBufferInfo2 const indicesInfo { resources.stagingBuffer.buffer, resources.cubeIndices.buffer, indicesRegion };
+
+            cmd.copyBuffer2(verticesInfo);
+            cmd.copyBuffer2(indicesInfo);
+        });
+
+    graph.push_pass(std::move(stagingPass));
+    graph.push_pass(std::move(transferPass));
+
+    graph.compile();
+    return graph;
+}
+
+std::pair<RenderGraph, TextureID> make_draw_graph(
+    Graphics const& graphics, Resources const& resources)
+{
+    RenderGraph graph {
+        graphics.device.device,
+        graphics.device.queueFamilyIndex,
+        graphics.device.queueFamilyIndex,
+        graphics.device.queueFamilyIndex,
+    };
+
+    auto const cubeVerticesID = graph.declare_buffer(sizeof(cube_vertices));
+    auto const cubeIndicesID = graph.declare_buffer(sizeof(cube_indices));
+    auto const swapchainImageID = graph.declare_texture(vk::ImageAspectFlagBits::eColor);
+
+    graph.associate(cubeVerticesID, resources.cubeVertices.buffer);
+    graph.associate(cubeIndicesID, resources.cubeIndices.buffer);
+
+    PassNode drawPass { "draw-pass", QueueType::graphics };
+    drawPass.write(swapchainImageID, TextureUsage::color_attachment);
+    drawPass.read(cubeVerticesID, BufferUsage::vertex);
+    drawPass.read(cubeIndicesID, BufferUsage::index);
+    drawPass.callback([&] (vk::CommandBuffer const cmd)
+        {
+            Renderer renderer {
+                graphics.swapchain.images[graphics.scheduler.currentImage],
+                graphics.swapchain.imageViews[graphics.scheduler.currentImage],
+                cmd };
+
+            renderer.bind_mesh(resources.cubeVertices.buffer, resources.cubeIndices.buffer);
+            renderer.bind_material(graphics.pipeline.pipeline);
+
+            auto const model = glm::rotate(
+                glm::mat4 { 1.0f },
+                static_cast<float>(glfwGetTime()) * glm::radians(45.0f),
+                glm::vec3 {0.f, 1.f, 0.f} );
+
+            auto const view = glm::lookAt(
+                glm::vec3{ 6.f, 6.f, 6.f },
+                glm::vec3{ 0.f, 0.f, 0.f },
+                glm::vec3{ 0.f, 1.f, 0.f });
+
+            auto proj = glm::perspective(
+                glm::radians(35.f),
+                1024.f / 576.f,
+                0.1f, 1000.f);
+
+            proj[1][1] *= -1.f;
+            auto const matrix = proj * view * model;
+
+            renderer.push_constant(graphics.layout.pipelineLayout, matrix);
+            renderer.begin();
+            renderer.draw();
+            renderer.end();
+        });
+
+    PassNode presentPass { "present-pass", QueueType::graphics };
+    presentPass.read(swapchainImageID, TextureUsage::present);
+    presentPass.callback([] (vk::CommandBuffer) {});
+
+    graph.push_pass(std::move(drawPass));
+    graph.push_pass(std::move(presentPass));
+
+    graph.compile();
+    return std::make_pair(std::move(graph), swapchainImageID);
+}
+
 int main()
 {
     spdlog::set_level(spdlog::level::info);
 
-    caldera_example::Context ctx;
-    caldera_example::Window wnd;
-    caldera_example::Device dvc;
-    caldera_example::Swapchain swp;
-    caldera_example::Scheduler sch;
+    Graphics graphics;
+    Resources resources;
 
-    caldera_example::Shader vsh;
-    caldera_example::Shader fsh;
-
-    caldera_example::BindlessLayout lyt;
-    caldera_example::BindlessDescriptors dsc;
-
-    caldera_example::Allocator alc;
-    caldera_example::Pipeline ppl;
-
-    caldera_example::Buffer cubeVertices;
-    caldera_example::Buffer cubeIndices;
-    caldera_example::Buffer staging;
-
-    if (!ctx.init() ||
-        !wnd.init(ctx) ||
-        !dvc.init(ctx, wnd) ||
-        !swp.init(dvc, wnd) ||
-        !sch.init(dvc, swp, 3) ||
-        !vsh.init(dvc, shader_link_compiled::spv_basic_vert) ||
-        !fsh.init(dvc, shader_link_compiled::spv_basic_frag) ||
-        !lyt.init(dvc) ||
-        !dsc.init(dvc, lyt) ||
-        !alc.init(ctx, dvc) ||
-        !staging.init(dvc, alc, { sizeof(caldera_example::cube_vertices), caldera_example::Buffer::MemoryType::constantly_mapped, vk::BufferUsageFlagBits::eTransferSrc }) ||
-        !cubeVertices.init(dvc, alc, { sizeof(caldera_example::cube_vertices), caldera_example::Buffer::MemoryType::gpu_local, vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst }) ||
-        !cubeIndices.init(dvc, alc, { sizeof(caldera_example::cube_indices), caldera_example::Buffer::MemoryType::gpu_local, vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst }) ||
-        !ppl.init(wnd, dvc, lyt, vsh, fsh))
-    {
+    if (!initialize(graphics, resources))
         return 1;
-    }
+
+    auto loadGraph = make_load_graph(graphics, resources);
+    auto [drawGraph, swapchainImageID] = make_draw_graph(graphics, resources);
 
     bool firstFrame = true;
+    uint32_t frameCount = 0;
+    uint32_t prevTime = 0;
 
-    while (!wnd.closing())
+    while (!graphics.window.closing())
     {
-        caldera_example::Window::poll_events();
+        Window::poll_events();
 
-        if (!sch.begin_frame())
+        if (!graphics.scheduler.begin_frame())
             return 1;
 
-        spdlog::info("Passing a frame");
+        drawGraph.associate(
+            swapchainImageID,
+            graphics.swapchain.images[graphics.scheduler.currentImage],
+            graphics.swapchain.imageViews[graphics.scheduler.currentImage]);
 
-        /* Copy mesh */
-        if (firstFrame)
+        auto cmd = graphics.scheduler.get_current_command_buffer();
+
+        if (auto const result = cmd.begin(vk::CommandBufferBeginInfo{});
+            result < vk::Result::eSuccess)
         {
-            /* Vertices */
-
-            auto cmd = sch.get_current_command_buffer();
-            cmd.begin(vk::CommandBufferBeginInfo{});
-
-            auto const stagingMapping = staging.get_constant_mapping();
-            std::memcpy(stagingMapping, caldera_example::cube_vertices.data(), sizeof(caldera_example::cube_vertices));
-
-            vk::BufferCopy2 const verticesRegion { 0, 0, sizeof(caldera_example::cube_vertices) };
-            cmd.copyBuffer2(vk::CopyBufferInfo2{ staging.buffer, cubeVertices.buffer, verticesRegion });
-            cmd.end();
-
-            auto const verticesCopyTicket = sch.submit_current_buffer(0, false);
-            sch.wait_for_ticket(verticesCopyTicket);
-
-            /* Indices */
-
-            cmd = sch.get_current_command_buffer();
-            cmd.begin(vk::CommandBufferBeginInfo{});
-
-            std::memcpy(stagingMapping, caldera_example::cube_indices.data(), sizeof(caldera_example::cube_indices));
-
-            vk::BufferCopy2 const indicesRegion { 0, 0, sizeof(caldera_example::cube_indices) };
-            cmd.copyBuffer2(vk::CopyBufferInfo2{ staging.buffer, cubeIndices.buffer, indicesRegion });
-            cmd.end();
-
-            auto const indicesCopyTicket = sch.submit_current_buffer(0, false);
-            sch.wait_for_ticket(indicesCopyTicket);
+            spdlog::error("Failed to begin a command buffer: {}", vk::to_string(result));
+            return 1;
         }
 
-        auto cmd = sch.get_current_command_buffer();
-        cmd.begin(vk::CommandBufferBeginInfo{});
+        if (firstFrame) {
+            loadGraph.execute(cmd);
+            firstFrame = false;
+        }
 
-        caldera_example::Renderer rdr{
-            swp.images[sch.currentImage], swp.imageViews[sch.currentImage], cmd };
+        drawGraph.execute(cmd);
 
-        rdr.bind_mesh(cubeVertices.buffer, cubeIndices.buffer);
-        rdr.bind_material(ppl.pipeline);
+        if (auto const result = cmd.end();
+            result < vk::Result::eSuccess)
+        {
+            spdlog::error("Failed to begin a command buffer: {}", vk::to_string(result));
+            return 1;
+        }
 
-        glm::mat4 model = glm::rotate(
-            glm::mat4(1.0f),
-            static_cast<float>(glfwGetTime()) * glm::radians(45.0f),
-            glm::vec3(0.0f, 1.0f, 0.0f));
-
-        glm::vec3 const target { 0.0f, 0.0f, 0.0f };
-        glm::vec3 const eye = target + glm::vec3(4.5f);
-        glm::vec3 const up{ 0.0f, 1.0f, 0.0f };
-
-        glm::mat4 view = glm::lookAt(eye, target, up);
-
-        float const aspect = static_cast<float>(1024) / static_cast<float>(576);
-        glm::mat4 proj = glm::perspective(glm::radians(35.0f), aspect, 0.1f, 1000.0f);
-
-        proj[1][1] *= -1.0f;
-
-        glm::mat4 const mvpMatrix = proj * view * model;
-
-        rdr.push_constant(lyt.pipelineLayout, mvpMatrix);
-
-        rdr.begin();
-
-        rdr.draw();
-
-        rdr.end();
-        cmd.end();
-
-        auto const ticket = sch.submit_current_buffer(0, true);
-
-        if (ticket == 0 ||
-            !sch.end_frame())
+        if (0 == graphics.scheduler.submit_current_buffer(0, true) ||
+            !graphics.scheduler.end_frame())
             return 1;
 
-        firstFrame = false;
+        ++frameCount;
+
+        if (auto const currTime = static_cast<uint32_t>(glfwGetTime());
+            currTime > prevTime)
+        {
+            prevTime = currTime;
+            spdlog::info("FPS: {}", frameCount);
+            frameCount = 0;
+        }
     }
 
-    return  sch.wait_idle() ? 0 : 1;
+    return graphics.scheduler.wait_idle() ? 0 : 1;
 }
