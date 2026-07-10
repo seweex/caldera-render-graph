@@ -1,7 +1,7 @@
-#ifndef CALDERA_PASS_H
-#define CALDERA_PASS_H
+#ifndef CALDERA_RENDER_GRAPH_PASS_H
+#define CALDERA_RENDER_GRAPH_PASS_H
 
-#include <config.h>
+#include <caldera-render-graph/config.h>
 
 #include <string>
 #include <vector>

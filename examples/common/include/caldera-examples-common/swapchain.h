@@ -1,11 +1,11 @@
-#ifndef CALDERA_EXAMPLE_SWAPCHAIN_H
-#define CALDERA_EXAMPLE_SWAPCHAIN_H
+#ifndef CALDERA_EXAMPLES_COMMON_SWAPCHAIN_H
+#define CALDERA_EXAMPLES_COMMON_SWAPCHAIN_H
 
 #include <array>
 
-#include <vulkan_include.h>
+#include <caldera-examples-common/config.h>
 
-namespace caldera_example
+namespace caldera_examples_common
 {
     struct Device;
     struct Window;

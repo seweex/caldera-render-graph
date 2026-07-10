@@ -1,10 +1,10 @@
-#ifndef CALDERA_EXAMPLE_IMAGE_H
-#define CALDERA_EXAMPLE_IMAGE_H
+#ifndef CALDERA_EXAMPLES_COMMON_IMAGE_H
+#define CALDERA_EXAMPLES_COMMON_IMAGE_H
 
-#include <vulkan_include.h>
+#include <caldera-examples-common/config.h>
 #include <vk_mem_alloc.h>
 
-namespace caldera_example
+namespace caldera_examples_common
 {
     struct Device;
     struct Allocator;

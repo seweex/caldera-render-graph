@@ -1,11 +1,11 @@
 
-#include <../../common/include/memory.h>
-#include <../../common/include/device.h>
-#include <../../common/include/window.h>
+#include <caldera-examples-common/memory.h>
+#include <caldera-examples-common/device.h>
+#include <caldera-examples-common/window.h>
 
 #include <spdlog/spdlog.h>
 
-namespace caldera_example
+namespace caldera_examples_common
 {
     Allocator::Allocator() noexcept = default;
 

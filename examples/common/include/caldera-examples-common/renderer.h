@@ -1,10 +1,10 @@
-#ifndef CALDERA_EXAMPLE_RENDERER_H
-#define CALDERA_EXAMPLE_RENDERER_H
+#ifndef CALDERA_EXAMPLES_COMMON_RENDERER_H
+#define CALDERA_EXAMPLES_COMMON_RENDERER_H
 
-#include <../../rotating-cube/include/vulkan_include.h>
+#include <caldera-examples-common/config.h>
 #include <glm/fwd.hpp>
 
-namespace caldera_example
+namespace caldera_examples_common
 {
     struct Renderer
     {

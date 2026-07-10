@@ -1,11 +1,11 @@
 
-#include <../../common/include/image.h>
-#include <memory.h>
-#include <../../common/include/device.h>
+#include <caldera-examples-common/image.h>
+#include <caldera-examples-common/memory.h>
+#include <caldera-examples-common/device.h>
 
 #include <spdlog/spdlog.h>
 
-namespace caldera_example
+namespace caldera_examples_common
 {
     bool Image::check_limits(vk::PhysicalDevice const device, Settings const settings)
     {

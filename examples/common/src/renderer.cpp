@@ -1,10 +1,10 @@
 
-#include <renderer.h>
-#include <../../common/include/mesh.h>
+#include <caldera-examples-common/renderer.h>
+#include <caldera-examples-common/mesh.h>
 
 #include <glm/glm.hpp>
 
-namespace caldera_example
+namespace caldera_examples_common
 {
     void Renderer::begin()
     {
@@ -47,6 +47,6 @@ namespace caldera_example
     }
 
     void Renderer::draw() {
-        commandBuffer.drawIndexed(caldera_example::cube_indices.size(), 1, 0, 0, 0);
+        commandBuffer.drawIndexed(caldera_examples_common::cube_indices.size(), 1, 0, 0, 0);
     }
 }

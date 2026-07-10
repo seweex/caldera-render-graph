@@ -1,10 +1,10 @@
 
-#include <../../common/include/shader.h>
+#include <caldera-examples-common/shader.h>
+#include <caldera-examples-common/device.h>
 
-#include <../../common/include/device.h>
 #include <spdlog/spdlog.h>
 
-namespace caldera_example
+namespace caldera_examples_common
 {
     Shader::Shader() noexcept = default;
 

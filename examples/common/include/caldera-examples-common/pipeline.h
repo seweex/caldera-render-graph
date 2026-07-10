@@ -1,9 +1,9 @@
-#ifndef CALDERA_EXAMPLE_PIPELINE_H
-#define CALDERA_EXAMPLE_PIPELINE_H
+#ifndef CALDERA_EXAMPLES_COMMON_PIPELINE_H
+#define CALDERA_EXAMPLES_COMMON_PIPELINE_H
 
-#include <../../rotating-cube/include/vulkan_include.h>
+#include <caldera-examples-common/config.h>
 
-namespace caldera_example
+namespace caldera_examples_common
 {
     struct Window;
     struct Device;

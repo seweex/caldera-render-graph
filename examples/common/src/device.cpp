@@ -1,13 +1,13 @@
 
-#include <../../common/include/device.h>
-#include <../../common/include/window.h>
+#include <caldera-examples-common/device.h>
+#include <caldera-examples-common/window.h>
 
 #include <cmath>
 #include <vector>
 #include <array>
 #include <spdlog/spdlog.h>
 
-namespace caldera_example
+namespace caldera_examples_common
 {
     /* * * *  */
     /* Device */

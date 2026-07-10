@@ -1,5 +1,5 @@
-#ifndef CALDERA_FWD_H
-#define CALDERA_FWD_H
+#ifndef CALDERA_RENDER_GRAPH_CONFIG_H
+#define CALDERA_RENDER_GRAPH_CONFIG_H
 
 /* Frequent includes & definitions */
 

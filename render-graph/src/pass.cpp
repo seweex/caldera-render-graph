@@ -1,6 +1,6 @@
 
-#include <pass.h>
-#include <resource.h>
+#include <caldera-render-graph/pass.h>
+#include <caldera-render-graph/resource.h>
 
 namespace caldera
 {

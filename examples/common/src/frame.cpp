@@ -1,6 +1,6 @@
 
-#include <frame.h>
-#include <../../common/include/device.h>
+#include <caldera-examples-common/frame.h>
+#include <caldera-examples-common/device.h>
 
 #include <spdlog/spdlog.h>
 
@@ -74,7 +74,7 @@ namespace
     }
 }
 
-namespace caldera_example
+namespace caldera_examples_common
 {
     FrameResources::FrameResources() noexcept = default;
     FrameResources::~FrameResources() noexcept = default;

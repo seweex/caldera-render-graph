@@ -5,19 +5,19 @@
 #include <spdlog/spdlog.h>
 #include <stb_image.h>
 
-#include <queue>
-#include <window.h>
-#include <device.h>
-#include <swapchain.h>
-#include <shader.h>
-#include <descriptor.h>
-#include <memory.h>
-#include <image.h>
-#include <buffer.h>
-#include <scheduler.h>
-#include <pipeline.h>
-#include <mesh.h>
-#include <renderer.h>
+#include <caldera-examples-common/window.h>
+#include <caldera-examples-common/device.h>
+#include <caldera-examples-common/swapchain.h>
+#include <caldera-examples-common/shader.h>
+#include <caldera-examples-common/descriptor.h>
+#include <caldera-examples-common/memory.h>
+#include <caldera-examples-common/image.h>
+#include <caldera-examples-common/buffer.h>
+#include <caldera-examples-common/scheduler.h>
+#include <caldera-examples-common/pipeline.h>
+#include <caldera-examples-common/mesh.h>
+#include <caldera-examples-common/renderer.h>
+
 #include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
@@ -27,11 +27,11 @@
 #include <shaders/basic.frag.hpp>
 #include <shaders/basic.vert.hpp>
 
-#include <graph.h>
-#include <pass.h>
+#include <caldera-render-graph/graph.h>
+#include <caldera-render-graph/pass.h>
 
 using namespace caldera;
-using namespace caldera_example;
+using namespace caldera_examples_common;
 
 struct Graphics
 {

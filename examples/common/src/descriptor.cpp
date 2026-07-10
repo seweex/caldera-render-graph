@@ -1,11 +1,11 @@
 
-#include <../../common/include/descriptor.h>
+#include <caldera-examples-common/descriptor.h>
+#include <caldera-examples-common/device.h>
 
-#include <device.h>
 #include <spdlog/spdlog.h>
 #include <glm/glm.hpp>
 
-namespace caldera_example
+namespace caldera_examples_common
 {
     /* * * * * * * * * */
     /* Bindless Layout */

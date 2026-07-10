@@ -1,9 +1,9 @@
-#ifndef CALDERA_EXAMPLE_FRAME_H
-#define CALDERA_EXAMPLE_FRAME_H
+#ifndef CALDERA_EXAMPLES_COMMON_FRAME_H
+#define CALDERA_EXAMPLES_COMMON_FRAME_H
 
-#include <../../rotating-cube/include/vulkan_include.h>
+#include <caldera-examples-common/config.h>
 
-namespace caldera_example
+namespace caldera_examples_common
 {
     struct FrameResources
     {

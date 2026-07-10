@@ -1,7 +1,8 @@
 
-#include <../../common/include/scheduler.h>
-#include <../../common/include/device.h>
-#include <../../common/include/swapchain.h>
+#include <caldera-examples-common/scheduler.h>
+#include <caldera-examples-common/device.h>
+#include <caldera-examples-common/swapchain.h>
+
 #include <spdlog/spdlog.h>
 
 namespace
@@ -47,7 +48,7 @@ namespace
     }
 }
 
-namespace caldera_example
+namespace caldera_examples_common
 {
     Scheduler::Scheduler() noexcept = default;
 

@@ -1,9 +1,9 @@
 
-#include <../../common/include/buffer.h>
-#include <../../common/include/device.h>
-#include <../../common/include/memory.h>
+#include <caldera-examples-common/buffer.h>
+#include <caldera-examples-common/device.h>
+#include <caldera-examples-common/memory.h>
 
-namespace caldera_example
+namespace caldera_examples_common
 {
     VmaAllocationCreateInfo Buffer::create_info(Settings settings) noexcept
     {

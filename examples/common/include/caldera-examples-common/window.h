@@ -1,14 +1,14 @@
-#ifndef CALDERA_EXAMPLE_WINDOW_H
-#define CALDERA_EXAMPLE_WINDOW_H
+#ifndef CALDERA_EXAMPLES_COMMON_WINDOW_H
+#define CALDERA_EXAMPLES_COMMON_WINDOW_H
 
 #include <memory>
 #include <vector>
 
-#include <vulkan_include.h>
+#include <caldera-examples-common/config.h>
 
 struct GLFWwindow;
 
-namespace caldera_example
+namespace caldera_examples_common
 {
     struct Context
     {

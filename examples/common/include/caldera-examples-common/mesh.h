@@ -1,12 +1,12 @@
-#ifndef CALDERA_EXAMPLE_MESH_H
-#define CALDERA_EXAMPLE_MESH_H
+#ifndef CALDERA_EXAMPLES_COMMON_MESH_H
+#define CALDERA_EXAMPLES_COMMON_MESH_H
 
 #include <array>
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
-namespace caldera_example
+namespace caldera_examples_common
 {
     struct Vertex
     {

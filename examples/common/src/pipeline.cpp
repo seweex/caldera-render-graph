@@ -1,13 +1,13 @@
 
-#include <pipeline.h>
-#include <swapchain.h>
-#include <../../common/include/window.h>
-#include <device.h>
-#include <../../common/include/shader.h>
-#include <../../common/include/mesh.h>
-#include <../../common/include/descriptor.h>
-#include <GLFW/glfw3.h>
+#include <caldera-examples-common/pipeline.h>
+#include <caldera-examples-common/swapchain.h>
+#include <caldera-examples-common/window.h>
+#include <caldera-examples-common/device.h>
+#include <caldera-examples-common/shader.h>
+#include <caldera-examples-common/mesh.h>
+#include <caldera-examples-common/descriptor.h>
 
+#include <GLFW/glfw3.h>
 #include <spdlog/spdlog.h>
 
 namespace
@@ -16,7 +16,7 @@ namespace
     create_vertex_input_bindings() noexcept
     {
         return { vk::VertexInputBindingDescription {
-            0, sizeof(caldera_example::Vertex), vk::VertexInputRate::eVertex
+            0, sizeof(caldera_examples_common::Vertex), vk::VertexInputRate::eVertex
         } };
     }
 
@@ -25,13 +25,13 @@ namespace
     {
         return {
             vk::VertexInputAttributeDescription{
-                0, 0, vk::Format::eR32G32B32Sfloat, offsetof(caldera_example::Vertex, position)
+                0, 0, vk::Format::eR32G32B32Sfloat, offsetof(caldera_examples_common::Vertex, position)
             },
             vk::VertexInputAttributeDescription{
-                1, 0, vk::Format::eR32G32Sfloat, offsetof(caldera_example::Vertex, uv)
+                1, 0, vk::Format::eR32G32Sfloat, offsetof(caldera_examples_common::Vertex, uv)
             },
             vk::VertexInputAttributeDescription{
-                2, 0, vk::Format::eR32G32B32Sfloat, offsetof(caldera_example::Vertex, normal)
+                2, 0, vk::Format::eR32G32B32Sfloat, offsetof(caldera_examples_common::Vertex, normal)
             }
         };
     }
@@ -69,7 +69,7 @@ namespace
     {
         return {
             0,
-            1, &caldera_example::Swapchain::target_image_format,
+            1, &caldera_examples_common::Swapchain::target_image_format,
             vk::Format::eD32Sfloat,
             vk::Format::eUndefined
         };
@@ -196,7 +196,7 @@ namespace
     }
 }
 
-namespace caldera_example
+namespace caldera_examples_common
 {
     Pipeline::Pipeline() noexcept = default;
 

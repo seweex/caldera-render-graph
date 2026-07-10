@@ -1,7 +1,7 @@
 
-#include <graph.h>
-#include <resource.h>
-#include <pass.h>
+#include <caldera-render-graph/graph.h>
+#include <caldera-render-graph/resource.h>
+#include <caldera-render-graph/pass.h>
 
 namespace
 {

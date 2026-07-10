@@ -1,10 +1,10 @@
-#ifndef CALDERA_EXAMPLE_BUFFER_H
-#define CALDERA_EXAMPLE_BUFFER_H
+#ifndef CALDERA_EXAMPLES_COMMON_BUFFER_H
+#define CALDERA_EXAMPLES_COMMON_BUFFER_H
 
-#include <config.h>
+#include <caldera-examples-common/config.h>
 #include <vk_mem_alloc.h>
 
-namespace caldera_example
+namespace caldera_examples_common
 {
     struct Device;
     struct Allocator;

@@ -28,7 +28,7 @@ at runtime for transient resource aliasing
 
 ### 🚀 Usage
 
-See the full working application in [example/src/main.cpp](example/src/main.cpp)
+See the full working application in [examples/rotating-cube/src/main.cpp](examples/rotating-cube/src/main.cpp)
 
 1. **Setup Phase**: Initialize your resources, declare opaque handles, and create pass nodes
     ```c++

@@ -9,6 +9,7 @@ find_package(Vulkan REQUIRED)
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)
 
 add_subdirectory(external/stb)
-
 add_subdirectory(render-graph)
-add_subdirectory(example)
+
+add_subdirectory(examples/common)
+add_subdirectory(examples/rotating-cube)

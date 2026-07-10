@@ -1,8 +1,8 @@
-#ifndef CALDERA_GRAPH_H
-#define CALDERA_GRAPH_H
+#ifndef CALDERA_RENDER_GRAPH_GRAPH_H
+#define CALDERA_RENDER_GRAPH_GRAPH_H
 
-#include <config.h>
-#include <../resource.h>
+#include <caldera-render-graph/config.h>
+#include <caldera-render-graph/resource.h>
 
 namespace caldera
 {

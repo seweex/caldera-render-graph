@@ -1,9 +1,9 @@
-#ifndef CALDERA_EXAMPLE_DEVICE_H
-#define CALDERA_EXAMPLE_DEVICE_H
+#ifndef CALDERA_EXAMPLES_COMMON_DEVICE_H
+#define CALDERA_EXAMPLES_COMMON_DEVICE_H
 
-#include <vulkan_include.h>
+#include <caldera-examples-common/config.h>
 
-namespace caldera_example
+namespace caldera_examples_common
 {
     struct Context;
     struct Window;

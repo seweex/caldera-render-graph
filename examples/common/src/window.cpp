@@ -1,11 +1,11 @@
 
-#include <window.h>
+#include <caldera-examples-common/window.h>
 
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.hpp>
 #include <spdlog/spdlog.h>
 
-namespace caldera_example
+namespace caldera_examples_common
 {
     /* * * * * */
     /* Context */
