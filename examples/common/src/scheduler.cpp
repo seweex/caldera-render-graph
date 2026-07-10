@@ -1,7 +1,7 @@
 
-#include <scheduler.h>
-#include <device.h>
-#include <swapchain.h>
+#include <../../common/include/scheduler.h>
+#include <../../common/include/device.h>
+#include <../../common/include/swapchain.h>
 #include <spdlog/spdlog.h>
 
 namespace

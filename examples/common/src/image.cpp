@@ -1,7 +1,7 @@
 
-#include <image.h>
+#include <../../common/include/image.h>
 #include <memory.h>
-#include <device.h>
+#include <../../common/include/device.h>
 
 #include <spdlog/spdlog.h>
 

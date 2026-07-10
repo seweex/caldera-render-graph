@@ -1,6 +1,6 @@
 
-#include <device.h>
-#include <window.h>
+#include <../../common/include/device.h>
+#include <../../common/include/window.h>
 
 #include <cmath>
 #include <vector>

@@ -2,7 +2,7 @@
 #define CALDERA_GRAPH_H
 
 #include <config.h>
-#include <resource.h>
+#include <../resource.h>
 
 namespace caldera
 {

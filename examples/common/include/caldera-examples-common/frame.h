@@ -1,7 +1,7 @@
 #ifndef CALDERA_EXAMPLE_FRAME_H
 #define CALDERA_EXAMPLE_FRAME_H
 
-#include <vulkan_include.h>
+#include <../../rotating-cube/include/vulkan_include.h>
 
 namespace caldera_example
 {

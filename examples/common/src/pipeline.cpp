@@ -1,11 +1,11 @@
 
 #include <pipeline.h>
 #include <swapchain.h>
-#include <window.h>
+#include <../../common/include/window.h>
 #include <device.h>
-#include <shader.h>
-#include <mesh.h>
-#include <descriptor.h>
+#include <../../common/include/shader.h>
+#include <../../common/include/mesh.h>
+#include <../../common/include/descriptor.h>
 #include <GLFW/glfw3.h>
 
 #include <spdlog/spdlog.h>

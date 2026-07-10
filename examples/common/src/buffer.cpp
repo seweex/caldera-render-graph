@@ -1,7 +1,7 @@
 
-#include <buffer.h>
-#include <device.h>
-#include <memory.h>
+#include <../../common/include/buffer.h>
+#include <../../common/include/device.h>
+#include <../../common/include/memory.h>
 
 namespace caldera_example
 {

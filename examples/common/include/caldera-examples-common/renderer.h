@@ -1,7 +1,7 @@
 #ifndef CALDERA_EXAMPLE_RENDERER_H
 #define CALDERA_EXAMPLE_RENDERER_H
 
-#include <vulkan_include.h>
+#include <../../rotating-cube/include/vulkan_include.h>
 #include <glm/fwd.hpp>
 
 namespace caldera_example

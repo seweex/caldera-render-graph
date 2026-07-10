@@ -1,7 +1,7 @@
 #ifndef CALDERA_EXAMPLE_BUFFER_H
 #define CALDERA_EXAMPLE_BUFFER_H
 
-#include <vulkan_include.h>
+#include <config.h>
 #include <vk_mem_alloc.h>
 
 namespace caldera_example

@@ -1,6 +1,6 @@
 
 #include <renderer.h>
-#include <mesh.h>
+#include <../../common/include/mesh.h>
 
 #include <glm/glm.hpp>
 

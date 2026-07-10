@@ -1,7 +1,7 @@
 
-#include <shader.h>
+#include <../../common/include/shader.h>
 
-#include <device.h>
+#include <../../common/include/device.h>
 #include <spdlog/spdlog.h>
 
 namespace caldera_example

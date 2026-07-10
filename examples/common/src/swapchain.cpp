@@ -1,7 +1,7 @@
 
-#include <swapchain.h>
-#include <device.h>
-#include <window.h>
+#include <../../common/include/swapchain.h>
+#include <../../common/include/device.h>
+#include <../../common/include/window.h>
 
 #include <spdlog/spdlog.h>
 
