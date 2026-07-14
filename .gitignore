@@ -3,5 +3,6 @@ build
 doc/html
 doc/latex
 examples/rotating-cube/shader-sources
+examples/simulation/include/compiled-shaders
 
 CMakeUserPresets.json

@@ -146,6 +146,7 @@ namespace caldera_examples_common
 
         vk::PhysicalDeviceFeatures2 deviceFeatures;
         deviceFeatures.features.shaderSampledImageArrayDynamicIndexing = vk::True;
+        deviceFeatures.features.largePoints = vk::True;
 
         vk::PhysicalDeviceVulkan12Features deviceFeatures12;
         deviceFeatures12.timelineSemaphore = vk::True;
@@ -161,6 +162,7 @@ namespace caldera_examples_common
         vk::PhysicalDeviceVulkan13Features deviceFeatures13;
         deviceFeatures13.dynamicRendering = vk::True;
         deviceFeatures13.synchronization2 = vk::True;
+        deviceFeatures13.shaderDemoteToHelperInvocation = vk::True;
 
         vk::PhysicalDeviceVulkan14Features deviceFeatures14;
         deviceFeatures14.pushDescriptor = vk::True;

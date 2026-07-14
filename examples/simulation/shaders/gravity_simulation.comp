@@ -1,0 +1,58 @@
+#version 450
+
+layout (local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
+
+struct Planet {
+    vec4 position_and_mass;
+    vec4 color_and_radius;
+    vec4 speed;
+};
+
+layout(std430, binding = 0) coherent buffer PlanetStorageBuffer {
+    Planet planets[];
+} planetBuffer;
+
+layout(push_constant) uniform Settings
+{
+    mat4 cameraMatrix;
+    float deltaTime;
+    float timeSpeed;
+} frameSettings;
+
+shared Planet localBuffer[128];
+
+const float G = 0.1f;
+
+void main()
+{
+    uint myIndex = gl_GlobalInvocationID.x;
+    localBuffer[myIndex] = planetBuffer.planets[myIndex];
+
+    barrier();
+
+    vec3 pos = localBuffer[myIndex].position_and_mass.xyz;
+    float mass = localBuffer[myIndex].position_and_mass.w;
+    vec3 speed = localBuffer[myIndex].speed.xyz;
+
+    vec3 totalAcceleration = vec3(0.f);
+
+    for (uint i = 0; i < 128; ++i)
+    {
+        if (i == myIndex) continue;
+
+        vec3 otherPos = localBuffer[i].position_and_mass.xyz;
+        float otherMass = localBuffer[i].position_and_mass.w;
+
+        vec3 direction = otherPos - pos;
+        float dist = max(length(direction), 0.1f);
+
+        float accelerationMagnitude = (G * otherMass) / (dist * dist);
+        totalAcceleration += normalize(direction) * accelerationMagnitude;
+    }
+
+    vec3 newSpeed = speed + totalAcceleration * frameSettings.deltaTime;
+    vec3 newPos = pos + newSpeed * frameSettings.deltaTime;
+
+    planetBuffer.planets[myIndex].position_and_mass = vec4(newPos, mass);
+    planetBuffer.planets[myIndex].speed = vec4(newSpeed, 0.f);
+}

@@ -13,3 +13,4 @@ add_subdirectory(render-graph)
 
 add_subdirectory(examples/common)
 add_subdirectory(examples/rotating-cube)
+add_subdirectory(examples/simulation)
