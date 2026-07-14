@@ -2,12 +2,16 @@
 
 A lightweight and easily extensible library for automatic management of Vulkan barriers and resources
 
-![](assets/cube.png)
+<div style="display: flex; align-items: stretch; gap: 10px;">
+  <img src="assets/cube.gif" style="flex: 1; object-fit: cover; max-height: 200px;">
+  <img src="assets/simulation.gif" style="flex: 1; object-fit: cover; max-height: 200px;">
+</div>
 
 ### 📋 Content
 
 - [Features](#-features)
 - [Usage](#-usage)
+  - [Examples](#examples)
 - [Requirements & Dependencies](#-requirements--dependencies)
 - [Building](#-building)
   - [Conan](#2a-via-conan-package-manager)
@@ -27,8 +31,6 @@ at runtime for transient resource aliasing
 - **Docs**: The project written with clear **doxygen** documentation 
 
 ### 🚀 Usage
-
-See the full working application in [example/src/main.cpp](example/src/main.cpp)
 
 1. **Setup Phase**: Initialize your resources, declare opaque handles, and create pass nodes
     ```c++
@@ -93,6 +95,19 @@ with virtual IDs and record commands
 > Since the graph architecture is completely stateless, `graph.associate(...)` 
 > **doesn't require** recompilation of the graph
 
+#### Examples
+
+- **Rotating cube**:
+  simplest demo of the Render Graph Usage. Includes the following graphs:
+  - Model loading: Staging Pass → Transfer Pass
+  - Rendering: Draw Pass → Present Pass
+  
+- **Simulation**:
+  simulates the gravity between **128** bodies on **GPU** via compute shaders, then draws 
+  processed planets. Here is graph usages:
+  - Planets loading: Staging Pass → Transfer Pass
+  - Frame graph: Physics Pass → Draw pass → Present Pass
+
 ### 🛠️ Requirements & Dependencies
 
 - C++20 compiler
@@ -105,7 +120,7 @@ For documentations:
 - [Doxygen](https://www.doxygen.nl/)
 - [Graphviz](https://graphviz.org/)
 - [doxygen-awesome-css](https://github.com/jothepro/doxygen-awesome-css/tree/main) -
-Improves appearance of docs
+Improves appearance of docs (goes as a git submodule)
 
 ### 3rd Party Software
 
@@ -117,6 +132,8 @@ Used by the *example application* **only**:
 - [GLFW](https://github.com/glfw/glfw)
 - [spdlog](https://github.com/gabime/spdlog)
 - [glm](https://github.com/g-truc/glm)
+- [stb_image](https://github.com/nothings/stb)
+- [shader-link](https://github.com/seweex/shader-link) (goes as a git submodule)
 
 ## ⚙️ Building
 

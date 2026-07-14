@@ -14,23 +14,21 @@ target_compile_definitions(caldera-render-graph PUBLIC
         VULKAN_HPP_NO_EXCEPTIONS
         GLFW_INCLUDE_VULKAN)
 
-target_precompile_headers(caldera-render-graph
-        PRIVATE
-        <config.h>)
+target_precompile_headers(caldera-render-graph PUBLIC <caldera-render-graph/config.h>)
 
 if(MSVC)
     string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    target_compile_options(caldera-render-graph PRIVATE /EHs-c-)
+    target_compile_options(caldera-render-graph PUBLIC /EHs-c-)
 else()
-    target_compile_options(caldera-render-graph PRIVATE -fno-exceptions)
+    target_compile_options(caldera-render-graph PUBLIC -fno-exceptions)
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-        target_compile_options(caldera-render-graph PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer)
-        target_link_options(caldera-render-graph PRIVATE -fsanitize=address,undefined)
+        target_compile_options(caldera-render-graph PUBLIC -fsanitize=address,undefined -fno-omit-frame-pointer)
+        target_link_options(caldera-render-graph PUBLIC -fsanitize=address,undefined)
     elseif(MSVC)
-        target_compile_options(my_vulkan_app PRIVATE $<$<CONFIG:Debug>:/fsanitize=address>)
-        target_link_options(caldera-render-graph PRIVATE /fsanitize=address)
+        target_compile_options(my_vulkan_app PUBLIC $<$<CONFIG:Debug>:/fsanitize=address>)
+        target_link_options(caldera-render-graph PUBLIC /fsanitize=address)
     endif()
 endif()

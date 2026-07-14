@@ -1,0 +1,46 @@
+#ifndef CALDERA_EXAMPLES_COMMON_DEVICE_H
+#define CALDERA_EXAMPLES_COMMON_DEVICE_H
+
+#include <caldera-examples-common/config.h>
+
+namespace caldera_examples_common
+{
+    struct Context;
+    struct Window;
+
+    struct Device
+    {
+    private:
+        struct ChoiceResult
+        {
+            vk::PhysicalDevice device;
+            uint32_t family;
+        };
+
+        [[nodiscard]] static uint32_t rate_device(vk::PhysicalDevice device, vk::SurfaceKHR surface);
+        [[nodiscard]] static std::optional<uint32_t> get_family_index(vk::PhysicalDevice device, vk::SurfaceKHR surface);
+        [[nodiscard]] static std::optional<ChoiceResult> choose_device(Context const& context, Window const& window);
+
+        [[nodiscard]] static vk::Device create_device(ChoiceResult choice);
+
+    public:
+        [[nodiscard]] bool init(Context const& context, Window const& window);
+        void clear() noexcept;
+
+        Device(Device &&) = delete;
+        Device& operator=(Device &&) = delete;
+
+        Device(Device const&) = delete;
+        Device& operator=(Device const&) = delete;
+
+        Device() noexcept;
+        ~Device() noexcept;
+
+        vk::PhysicalDevice physicalDevice;
+        vk::Device device;
+
+        uint32_t queueFamilyIndex;
+    };
+}
+
+#endif

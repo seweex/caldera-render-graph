@@ -2,6 +2,7 @@
 build
 doc/html
 doc/latex
-example/shader-sources
+examples/rotating-cube/shader-sources
+examples/simulation/include/compiled-shaders
 
 CMakeUserPresets.json
