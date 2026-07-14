@@ -1,5 +1,5 @@
 [submodule "doc/theme/doxygen-awesome-css"]
-	path = doc/theme/doxygen-awesome-css
+	path = external/doxygen-awesome-css
 	url = https://github.com/jothepro/doxygen-awesome-css.git
 [submodule "external/shader-link"]
 	path = external/shader-link

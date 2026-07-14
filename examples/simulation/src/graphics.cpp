@@ -53,12 +53,12 @@ namespace
             };
 
             if (auto newView = context.device.device.createImageViewUnique(info);
-                !newView.has_value())
+                !newView.value)
             {
                 return {};
             }
             else
-                result.emplace_back(std::move(*newView));
+                result.emplace_back(std::move(newView.value));
         }
 
         return result;

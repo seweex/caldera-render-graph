@@ -182,8 +182,8 @@ cmake --build --preset conan-debug
 You can easily configure the docs via `doxygen`:
 
 ```bash
-doxygen Doxyfile
+doxygen Doxyfile.cfg
 ```
 
-See for the generated docs in the [doc/html/index.html](doc/html/index.html). 
+See for the generated docs in the [doc/html/index.html](docs/html/index.html). 
 Open it with your browser
