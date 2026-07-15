@@ -2,15 +2,15 @@
 
 A lightweight and easily extensible library for automatic management of Vulkan barriers and resources
 
-<div style="display: flex; align-items: stretch; gap: 10px;">
-  <img src="assets/cube.gif" style="flex: 1; object-fit: cover; max-height: 200px;">
-  <img src="assets/simulation.gif" style="flex: 1; object-fit: cover; max-height: 200px;">
-</div>
+<p align="left">
+  <img src="assets/cube.gif" height="200" alt="Cube" />
+  <img src="assets/simulation.gif" height="200" alt="Simulation" />
+</p>
 
 ## 📋 Content
 
 - [Features](#-features)
-- [3rd Party Solutions](#3rd-party-solutions)
+- [3rd Party Solutions](#-3rd-party-solutions)
 - [Usage](#-usage)
   - [Examples](#examples)
     - [Rotating Cube](examples/rotating-cube/README.md)
