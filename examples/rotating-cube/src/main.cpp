@@ -24,8 +24,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <shaders/basic.frag.hpp>
-#include <shaders/basic.vert.hpp>
+#include <compiled-shaders/basic.frag.hpp>
+#include <compiled-shaders/basic.vert.hpp>
 
 #include <caldera-render-graph/graph.h>
 #include <caldera-render-graph/pass.h>
