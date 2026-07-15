@@ -7,19 +7,25 @@ A lightweight and easily extensible library for automatic management of Vulkan b
   <img src="assets/simulation.gif" style="flex: 1; object-fit: cover; max-height: 200px;">
 </div>
 
-### 📋 Content
+## 📋 Content
 
 - [Features](#-features)
+- [3rd Party Solutions](#3rd-party-solutions)
 - [Usage](#-usage)
   - [Examples](#examples)
+    - [Rotating Cube](examples/rotating-cube/README.md)
+    - [Simulation](examples/simulation/README.md)
 - [Requirements & Dependencies](#-requirements--dependencies)
+  - [Basic requirements & deps](#basic-requirements--deps)
+  - [Example's requirements](#examples-requirements)
 - [Building](#-building)
-  - [Conan](#2a-via-conan-package-manager)
-  - [Manual](#2b-via-manual-package-installation)
+  - [Step-by-step guide](#1-clone-the-repository)
+  - [CMake Targets](#cmake-targets)
+  - [CMake Options](#cmake-options)
 - [Documentation](#-documentation)
 - [TODO List](TODO.md)
 
-### 🔥 Features
+## 🔥 Features
 
 - **Vulkan Sync2 Ready**: Uses modern synchronization tools
 - **Stateless Execution**: The graph is compiled once; transitions are cached as 
@@ -28,10 +34,27 @@ lightweight templates, resulting in near-zero CPU overhead during the execution
 at runtime for transient resource aliasing
 - **O(1) Access:** Fast indexing using lightweight virtual resource's IDs
 - **Exception-Free**: Designed for the best performance in game engines
-- **Zero Dependencies**: The core library depends on Vulkan SDK only
+- **Zero Dependencies**: The core library depends on Vulkan SDK and VMA only
 - **Docs**: The project written with clear **doxygen** documentation 
 
-### 🚀 Usage
+## 🔩 3rd Party Solutions
+
+Thanks to developers for this best products:
+
+- [Vulkan](https://vulkan.lunarg.com/sdk/home)
+- [Vulkan Memory Allocator](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator)
+- [GLFW](https://github.com/glfw/glfw)
+- [spdlog](https://github.com/gabime/spdlog)
+- [glm](https://github.com/g-truc/glm)
+- [Doxygen](https://www.doxygen.nl/)
+- [Graphviz](https://graphviz.org/)
+- [stb_image](https://github.com/nothings/stb)
+
+And also there is my another project 
+
+- [shader-link](https://github.com/seweex/shader-link) - python script for shader compilations
+
+## 🚀 Usage
 
 1. **Setup Phase**: Initialize your resources, declare opaque handles, and create pass nodes
     ```c++
@@ -96,7 +119,7 @@ with virtual IDs and record commands
 > Since the graph architecture is completely stateless, `graph.associate(...)` 
 > **doesn't require** recompilation of the graph
 
-#### Examples
+### Examples
 
 - **Rotating cube**:
   simplest demo of the Render Graph Usage. Includes the following graphs:
@@ -109,81 +132,81 @@ with virtual IDs and record commands
   - Planets loading: Staging Pass → Transfer Pass
   - Frame graph: Physics Pass → Draw pass → Present Pass
 
-### 🛠️ Requirements & Dependencies
+## 🛠️ Requirements & Dependencies
 
+### Basic requirements & deps
+
+There is tools & packages you need to install manually. 
+[Here]() is a list of all used 3rd party solutions.
+
+Tools:
 - C++20 compiler
 - CMake (3.25+)
-- Vulkan SDK (1.4+)
-- Conan (2.0+)
+- Conan (2.0+) - for examples **only**
 
-For documentations:
+Dependencies
+- [Vulkan SDK (1.4+)](https://vulkan.lunarg.com/sdk/home)
 
+_For docs_:
 - [Doxygen](https://www.doxygen.nl/)
 - [Graphviz](https://graphviz.org/)
-- [doxygen-awesome-css](https://github.com/jothepro/doxygen-awesome-css/tree/main) -
-Improves appearance of docs (goes as a git submodule)
 
-### 3rd Party Software
+### Example's requirements
 
-- [Vulkan SDK](https://vulkan.lunarg.com/sdk/home)
+3rd party solutions used by example apps only:
 
-Used by the *example application* **only**:
+- [Python Interpreter](https://python.com)
 
-- [Vulkan Memory Allocator](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator)
-- [GLFW](https://github.com/glfw/glfw)
-- [spdlog](https://github.com/gabime/spdlog)
-- [glm](https://github.com/g-truc/glm)
-- [stb_image](https://github.com/nothings/stb)
-- [shader-link](https://github.com/seweex/shader-link) (goes as a git submodule)
 
 ## ⚙️ Building
 
-### 0. Install Vulkan SDK
+### 0. Install required deps
 
-Go to [official Vulkan SDK source](https://vulkan.lunarg.com/sdk/home) and install it
+Install all needed dependencies listed [here](#-requirements--dependencies)
 
-### 1. Clone the repository:
+### 1. Clone the repository
 
 ```bash
-git clone --recursive https://github.com/seweex/caldera-render-graph.git
+git clone https://github.com/seweex/caldera-render-graph.git
 cd caldera-render-graph
 ```
 
-### 2a. Via `conan` package manager
+### 2. Configure the project
+
+Specify your generator and CMake variables
+> It's **required** to specify the `CMAKE_BUILD_TYPE` (Debug/Release) variable on
+> the configuration step
 
 ```bash
-conan install . --output-folder=build --build=missing
-cmake --preset conan-release
-cmake --build --preset conan-release
+mkdir build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Debug -G Ninja
 ```
 
-or for debug preset
+### 3. Build required targets
 
 ```bash
-conan install . -s build_type=Debug --output-folder=build --build=missing
-cmake --preset conan-debug
-cmake --build --preset conan-debug
+cmake --build . --target=caldera-render-graph
 ```
 
-### 2b. Via manual package installation
+### CMake Targets
+Targets declared by the project:
+- `caldera-render-graph` - the main library target
+- `caldera-rotating-cube` - the [rotating cube](examples/rotating-cube/README.md) target, required `CALDERA_BUILD_EXAMPLES=ON`
+- `caldera-simulation` - the [simulation](examples/simulation/README.md) target, required `CALDERA_BUILD_EXAMPLES=ON`
+- `caldera-docs` - generates docs for the graph, required `CALDERA_GEN_DOCS=ON`
 
-- Install all [dependencies](#dependencies)
-- Make sure it's available to be found by _find_package()_
-- Then call this (specify your generator):
-  ```bash
-  mkdir build
-  cd build
-  cmake -G "Ninja" ..
-  cmake --build .  
-  ```
+### CMake Options
+- `CALDERA_BUILD_EXAMPLES` - enables example building, default is **False**
+- `CALDERA_USE_SANITIZERS` - enables building with sanitizers, default is **CMAKE_BUILD_TYPE==Debug**
+- `CALDERA_GEN_DOCS` - enables docs generation target, default is **False**
 
 ## 📄 Documentation
 
-You can easily configure the docs via `doxygen`:
+Before generation docs, install docs-required [dependencies](#-requirements--dependencies)
 
-```bash
-doxygen Doxyfile.cfg
-```
+You can easily configure the docs for the graph. To gen docs, configure 
+the CMake project with `-DCALDERA_GEN_DOCS=ON` and build the `caldera-docs` target.
 
-See for the generated docs in the [doc/html/index.html](docs/html/index.html). 
+Then see for the generated docs in the [docs/html/index.html](docs/html/index.html). 
 Open it with your browser

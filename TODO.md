@@ -4,10 +4,10 @@
 Here are some features I want to implement. I hope I can make an actually useful 
 project.
 
-- [ ] Clean the repository
-  - [ ] Build example projects only if user asked
-  - [ ] Make `README.md` for all example projects
-  - [ ] Update main `README.md`
+- [X] Clean the repository
+  - [X] Build example projects only if user asked
+  - [X] Make `README.md` for all example projects
+  - [X] Update main `README.md`
 
 - [ ] Improve Render Graph
   - [ ] Add multi-queue sync
