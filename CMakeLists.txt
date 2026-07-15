@@ -27,10 +27,10 @@ function(run_conan_install CONAN_FILE_NAME)
     message(STATUS "[CONAN] Install finished successfully")
 endfunction()
 
-run_conan_install("conanfile_graph.txt")
-
 if(CALDERA_BUILD_EXAMPLES)
     run_conan_install("conanfile_examples.txt")
+else()
+    run_conan_install("conanfile_graph.txt")
 endif()
 
 set(CMAKE_TOOLCHAIN_FILE "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/generators/conan_toolchain.cmake" CACHE STRING "" FORCE)

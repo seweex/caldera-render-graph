@@ -1,4 +1,5 @@
 [requires]
+vulkan-memory-allocator/3.3.0
 spdlog/1.17.0
 glfw/3.4
 glm/1.0.3
