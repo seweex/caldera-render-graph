@@ -16,10 +16,14 @@ namespace caldera
         [[nodiscard]] uint32_t choose_family(QueueType type) const noexcept;
 
         /// @internal
-        [[nodiscard]] detail::TextureVulkanState gen_low_level_state(detail::TextureState state) const;
+        [[nodiscard]] detail::TextureVulkanState gen_low_level_state(
+            detail::TextureDescription const& description,
+            detail::TextureState state) const;
 
         /// @internal
-        [[nodiscard]] detail::BufferVulkanState gen_low_level_state(detail::BufferState state) const;
+        [[nodiscard]] detail::BufferVulkanState gen_low_level_state(
+            detail::BufferDescription const& description,
+            detail::BufferState state) const;
 
     public:
         /**
@@ -45,18 +49,26 @@ namespace caldera
         /**
          * @brief Declares a virtual texture resource and adds it to the registry
          *
+         * @param owningFamily Queue family that owns the texture. Pass vk::QueueFamilyIgnored if
+         * the resource created with the vk::SharingMode::eConcurrent flag
          * @param aspects Vulkan aspect flags of the target texture
          * @return ID of the declared texture
          */
-        [[nodiscard]] TextureID declare_texture(vk::ImageAspectFlags aspects);
+        [[nodiscard]] TextureID declare_texture(
+            uint32_t owningFamily,
+            vk::ImageAspectFlags aspects);
 
         /**
          * @brief Declares a virtual buffer resource and adds it to the registry
          *
+         * @param owningFamily Queue family that owns the buffer. Pass vk::QueueFamilyIgnored if
+         * the resource created with the vk::SharingMode::eConcurrent flag
          * @param size Size of the target buffer
          * @return ID of the declared buffer
          */
-        [[nodiscard]] BufferID declare_buffer(vk::DeviceSize size);
+        [[nodiscard]] BufferID declare_buffer(
+            uint32_t owningFamily,
+            vk::DeviceSize size);
 
         /**
          * @brief Associates the virtual ID to a Vulkan image
@@ -119,6 +131,23 @@ namespace caldera
 
         std::vector<detail::TextureDescription> m_textures;
         std::vector<detail::BufferDescription> m_buffers;
+    };
+}
+
+namespace caldera::detail
+{
+    enum class TransitionRequirements
+    {
+        not_required,
+        prevent_hazard,
+        transit_ownership
+    };
+
+    enum class TransitionType
+    {
+        anti_hazard,
+        ownership_release,
+        ownership_acquisition
     };
 }
 

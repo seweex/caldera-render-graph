@@ -28,6 +28,9 @@ namespace caldera::detail
 {
     enum class ResourceAccess : uint8_t;
 
+    enum class TransitionRequirements;
+    enum class TransitionType;
+
     struct TextureState;
     struct BufferState;
 

@@ -70,19 +70,18 @@ namespace
         caldera_examples_simulation::GraphicsResources& resources,
         std::vector<caldera_examples_simulation::Planet> planets)
     {
+        auto const family = context.device.queueFamilyIndex;
+
         caldera::RenderGraph graph {
-            context.device.device,
-            context.device.queueFamilyIndex,
-            context.device.queueFamilyIndex,
-            context.device.queueFamilyIndex
+            context.device.device, family, family, family
         };
 
         auto constexpr size =
             sizeof(caldera_examples_simulation::Planet) *
             caldera_examples_simulation::planet_count;
 
-        auto const stagingID = graph.declare_buffer(size);
-        auto const planetID = graph.declare_buffer(size);
+        auto const stagingID = graph.declare_buffer(family, size);
+        auto const planetID = graph.declare_buffer(family, size);
 
         caldera::PassNode stagingPass{ "staging-pass", caldera::QueueType::transfer };
         stagingPass.write(stagingID, caldera::BufferUsage::mapped_usage);
@@ -119,20 +118,19 @@ namespace
         caldera_examples_simulation::GraphicsResources& resources,
         caldera_examples_simulation::Settings& settings)
     {
+        auto const family = context.device.queueFamilyIndex;
+
         caldera::RenderGraph graph {
-            context.device.device,
-            context.device.queueFamilyIndex,
-            context.device.queueFamilyIndex,
-            context.device.queueFamilyIndex
+            context.device.device, family, family, family
         };
 
         auto constexpr size =
             sizeof(caldera_examples_simulation::Planet) *
             caldera_examples_simulation::planet_count;
 
-        auto const planetsID = graph.declare_buffer(size);
-        auto const depthID = graph.declare_texture(vk::ImageAspectFlagBits::eDepth);
-        auto const swapchainID = graph.declare_texture(vk::ImageAspectFlagBits::eColor);
+        auto const planetsID = graph.declare_buffer(family, size);
+        auto const depthID = graph.declare_texture(family, vk::ImageAspectFlagBits::eDepth);
+        auto const swapchainID = graph.declare_texture(family, vk::ImageAspectFlagBits::eColor);
 
         caldera::PassNode gravityPass{ "gravity-pass", caldera::QueueType::compute };
         gravityPass.write(planetsID, caldera::BufferUsage::mapped_usage);
