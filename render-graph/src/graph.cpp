@@ -5,46 +5,45 @@
 
 namespace
 {
-    inline constexpr caldera::detail::TextureVulkanState init_texture_state
+    [[nodiscard]] caldera::detail::TextureVulkanState
+    make_init_state(caldera::detail::TextureDescription const& description)
     {
-        vk::QueueFamilyIgnored,
-        vk::AccessFlagBits2::eNone,
-        vk::PipelineStageFlagBits2::eAllCommands,
-        vk::ImageLayout::eUndefined
-    };
+        caldera::detail::TextureVulkanState result;
+        result.family = description.owningFamily;
+        result.access = vk::AccessFlagBits2::eNone;
+        result.stages = vk::PipelineStageFlagBits2::eAllCommands;
+        result.layout = vk::ImageLayout::eUndefined;
 
-    inline constexpr caldera::detail::BufferVulkanState init_buffer_state
+        return result;
+    }
+
+    [[nodiscard]] caldera::detail::BufferVulkanState
+    make_init_state(caldera::detail::BufferDescription const& description)
     {
-        vk::QueueFamilyIgnored,
-        vk::AccessFlagBits2::eNone,
-        vk::PipelineStageFlagBits2::eAllCommands
-    };
+        caldera::detail::BufferVulkanState result;
+        result.family = description.owningFamily;
+        result.access = vk::AccessFlagBits2::eNone;
+        result.stages = vk::PipelineStageFlagBits2::eAllCommands;
+
+        return result;
+    }
 
     template <class StateTy>
-    [[nodiscard]] bool needs_transition(
+    [[nodiscard]] caldera::detail::TransitionRequirements needs_transition(
         StateTy const previousLowLevelState,
         StateTy const requiredLowLevelState)
     {
         using namespace caldera;
 
-        if constexpr (std::same_as<std::remove_reference_t<StateTy>, detail::TextureVulkanState>)
-        {
-            if (previousLowLevelState == init_texture_state)
-                return true;
-
+        if constexpr (std::same_as<std::remove_cvref_t<StateTy>, detail::TextureVulkanState>)
             if (previousLowLevelState.layout == vk::ImageLayout::eUndefined ||
                 previousLowLevelState.layout != requiredLowLevelState.layout)
             {
-                return true;
+                return detail::TransitionRequirements::prevent_hazard;
             }
-        }
-        else {
-            if (previousLowLevelState == init_buffer_state)
-                return true;
-        }
 
         if (previousLowLevelState.family != requiredLowLevelState.family)
-            return true;
+            return detail::TransitionRequirements::transit_ownership;
 
         auto constexpr write_mask =
             vk::AccessFlagBits2::eShaderWrite |
@@ -57,9 +56,9 @@ namespace
         auto const requiredWrites = static_cast<bool>(requiredLowLevelState.access & write_mask);
 
         if (previousWrites || requiredWrites)
-            return true;
+            return detail::TransitionRequirements::prevent_hazard;
 
-        return false;
+        return detail::TransitionRequirements::not_required;
     }
 
     [[nodiscard]] vk::ImageSubresourceRange
@@ -97,6 +96,85 @@ namespace
         result.aspectMask = result.aspectMask & imageAspects;
         return result;
     }
+
+    [[nodiscard]] caldera::detail::TextureTransition
+    make_transition(
+        caldera::TextureID const id,
+        caldera::detail::TransitionType const type,
+        caldera::detail::TextureDescription const& description,
+        caldera::detail::TextureState const binding,
+        caldera::detail::TextureVulkanState const& prevState,
+        caldera::detail::TextureVulkanState const& reqState)
+    {
+        caldera::detail::TextureTransition result;
+        result.id = id;
+        result.subresource = make_subresource(binding, description.aspects);
+
+        switch (type)
+        {
+        case caldera::detail::TransitionType::anti_hazard:
+            result.srcState = prevState;
+            result.dstState = reqState;
+            break;
+
+        case caldera::detail::TransitionType::ownership_acquisition:
+            result.srcState.access = vk::AccessFlagBits2::eNone;
+            result.srcState.stages = vk::PipelineStageFlagBits2::eNone;
+            result.srcState.layout = prevState.layout;
+            result.srcState.family = prevState.family;
+
+            result.dstState = reqState;
+            break;
+
+        case caldera::detail::TransitionType::ownership_release:
+            result.dstState.access = vk::AccessFlagBits2::eNone;
+            result.dstState.stages = vk::PipelineStageFlagBits2::eNone;
+            result.dstState.layout = reqState.layout;
+            result.dstState.family = reqState.family;
+
+            result.srcState = prevState;
+            break;
+        }
+
+        return result;
+    }
+
+    [[nodiscard]] caldera::detail::BufferTransition
+    make_transition(
+        caldera::BufferID const id,
+        caldera::detail::TransitionType const type,
+        caldera::detail::BufferVulkanState const& prevState,
+        caldera::detail::BufferVulkanState const& reqState)
+    {
+        caldera::detail::BufferTransition result;
+        result.id = id;
+
+        switch (type)
+        {
+        case caldera::detail::TransitionType::anti_hazard:
+            result.srcState = prevState;
+            result.dstState = reqState;
+            break;
+
+        case caldera::detail::TransitionType::ownership_acquisition:
+            result.srcState.access = vk::AccessFlagBits2::eNone;
+            result.srcState.stages = vk::PipelineStageFlagBits2::eNone;
+            result.srcState.family = prevState.family;
+
+            result.dstState = reqState;
+            break;
+
+        case caldera::detail::TransitionType::ownership_release:
+            result.dstState.access = vk::AccessFlagBits2::eNone;
+            result.dstState.stages = vk::PipelineStageFlagBits2::eNone;
+            result.dstState.family = reqState.family;
+
+            result.srcState = prevState;
+            break;
+        }
+
+        return result;
+    }
 }
 
 namespace caldera
@@ -113,13 +191,18 @@ namespace caldera
 
         case QueueType::compute:
             return m_computeFamily;
+
+        default:
+            return vk::QueueFamilyIgnored;
         }
     }
 
-    detail::TextureVulkanState RenderGraph::gen_low_level_state(detail::TextureState const state) const
+    detail::TextureVulkanState RenderGraph::gen_low_level_state(
+        detail::TextureDescription const& description,
+        detail::TextureState const state) const
     {
         if (state.queue == QueueType::none)
-            return init_texture_state;
+            return make_init_state(description);
 
         detail::TextureVulkanState result;
         result.family = choose_family(state.queue);
@@ -181,10 +264,12 @@ namespace caldera
         return result;
     }
 
-    detail::BufferVulkanState RenderGraph::gen_low_level_state(detail::BufferState const state) const
+    detail::BufferVulkanState RenderGraph::gen_low_level_state(
+        detail::BufferDescription const& description,
+        detail::BufferState const state) const
     {
         if (state.queue == QueueType::none)
-            return init_buffer_state;
+            return make_init_state(description);
 
         detail::BufferVulkanState result;
         result.family = choose_family(state.queue);
@@ -250,21 +335,29 @@ namespace caldera
         m_computeFamily(computeFamily)
     {}
 
-    TextureID RenderGraph::declare_texture(vk::ImageAspectFlags const aspects)
+    TextureID RenderGraph::declare_texture(
+        uint32_t const owningFamily,
+        vk::ImageAspectFlags const aspects)
     {
         auto const index = static_cast<uint32_t>(m_textures.size());
         auto& desc = m_textures.emplace_back();
 
         desc.aspects = aspects;
+        desc.owningFamily = owningFamily;
+
         return TextureID{ index };
     }
 
-    BufferID RenderGraph::declare_buffer(vk::DeviceSize const size)
+    BufferID RenderGraph::declare_buffer(
+        uint32_t const owningFamily,
+        vk::DeviceSize const size)
     {
         auto const index = static_cast<uint32_t>(m_buffers.size());
         auto& desc = m_buffers.emplace_back();
 
         desc.size = size;
+        desc.owningFamily = owningFamily;
+
         return BufferID{ index };
     }
 
@@ -296,50 +389,83 @@ namespace caldera
         std::vector<detail::TextureVulkanState> textureStates;
         std::vector<detail::BufferVulkanState> bufferStates;
 
-        textureStates.resize(m_textures.size(), init_texture_state);
-        bufferStates.resize(m_buffers.size(), init_buffer_state);
+        textureStates.reserve(m_textures.size());
+        bufferStates.reserve(m_buffers.size());
 
-        for (auto& pass : m_passes)
+        for (auto const& desc : m_textures)
+            textureStates.emplace_back(make_init_state(desc));
+
+        for (auto const& desc : m_buffers)
+            bufferStates.emplace_back(make_init_state(desc));
+
+        for (auto passIt = m_passes.begin(); passIt != m_passes.end(); ++passIt)
         {
-            for (auto const [id, state] : pass.m_textureBindings)
+            for (auto const [id, state] : passIt->m_textureBindings)
             {
+                auto const& desc = m_textures[id.id];
+
                 auto& prevState = textureStates[id.id];
-                auto reqState = gen_low_level_state(state);
+                auto reqState = gen_low_level_state(desc, state);
 
-                if (prevState.family == vk::QueueFamilyIgnored)
-                    reqState.family = vk::QueueFamilyIgnored;
-
-                if (needs_transition(prevState, reqState))
+                switch (needs_transition(prevState, reqState))
                 {
-                    auto const subresource = make_subresource(state, m_textures[id.id].aspects);
-                    assert(static_cast<bool>(subresource.aspectMask));
-
-                    pass.m_textureTransitions.emplace_back(id, prevState, reqState, subresource);
-                    prevState = reqState;
-                }
-                else {
+                case detail::TransitionRequirements::not_required:
                     prevState.access |= reqState.access;
                     prevState.stages |= reqState.stages;
+                    continue;
+
+                case detail::TransitionRequirements::prevent_hazard:
+                    passIt->m_textureTransitions.push_back(make_transition(
+                        id, detail::TransitionType::anti_hazard, desc, state, prevState, reqState));
+
+                    break;
+
+                case detail::TransitionRequirements::transit_ownership:
+                    if (passIt != m_passes.begin())
+                        std::prev(passIt)->m_textureTransitions.push_back(make_transition(
+                            id, detail::TransitionType::ownership_release, desc, state, prevState, reqState));
+
+                    passIt->m_textureTransitions.push_back(make_transition(
+                        id, detail::TransitionType::ownership_acquisition, desc, state, prevState, reqState));
+
+                    break;
                 }
+
+                prevState = reqState;
             }
 
-            for (auto const [id, state] : pass.m_bufferBindings)
+            for (auto const [id, state] : passIt->m_bufferBindings)
             {
+                auto const& desc = m_buffers[id.id];
+
                 auto& prevState = bufferStates[id.id];
-                auto reqState = gen_low_level_state(state);
+                auto reqState = gen_low_level_state(desc, state);
 
-                if (prevState.family == vk::QueueFamilyIgnored)
-                    reqState.family = vk::QueueFamilyIgnored;
-
-                if (needs_transition(prevState, reqState))
+                switch (needs_transition(prevState, reqState))
                 {
-                    pass.m_bufferTransitions.emplace_back(id, prevState, reqState);
-                    prevState = reqState;
-                }
-                else {
+                case detail::TransitionRequirements::not_required:
                     prevState.access |= reqState.access;
                     prevState.stages |= reqState.stages;
+                    continue;
+
+                case detail::TransitionRequirements::prevent_hazard:
+                    passIt->m_bufferTransitions.push_back(make_transition(
+                        id, detail::TransitionType::anti_hazard, prevState, reqState));
+
+                    break;
+
+                case detail::TransitionRequirements::transit_ownership:
+                    if (passIt != m_passes.begin())
+                        std::prev(passIt)->m_bufferTransitions.push_back(make_transition(
+                            id, detail::TransitionType::ownership_release, prevState, reqState));
+
+                    passIt->m_bufferTransitions.push_back(make_transition(
+                        id, detail::TransitionType::ownership_acquisition, prevState, reqState));
+
+                    break;
                 }
+
+                prevState = reqState;
             }
         }
     }

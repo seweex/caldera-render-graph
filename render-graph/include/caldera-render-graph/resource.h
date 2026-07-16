@@ -126,6 +126,7 @@ namespace caldera::detail
         vk::ImageView view;
 
         vk::ImageAspectFlags aspects;
+        uint32_t owningFamily;
     };
 
     struct TextureTransition
@@ -167,6 +168,8 @@ namespace caldera::detail
     {
         vk::Buffer buffer;
         vk::DeviceSize size;
+
+        uint32_t owningFamily;
     };
 
     struct BufferTransition

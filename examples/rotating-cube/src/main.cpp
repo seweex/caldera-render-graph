@@ -93,16 +93,15 @@ bool initialize(Graphics& graphics, Resources& resources)
 RenderGraph make_load_graph(
     Graphics const& graphics, Resources& resources)
 {
+    auto const family = graphics.device.queueFamilyIndex;
+
     RenderGraph graph {
-        graphics.device.device,
-        graphics.device.queueFamilyIndex,
-        graphics.device.queueFamilyIndex,
-        graphics.device.queueFamilyIndex,
+        graphics.device.device, family, family, family
     };
 
-    auto const stagingBufferID = graph.declare_buffer(sizeof(cube_vertices) + sizeof(cube_indices));
-    auto const cubeVerticesID = graph.declare_buffer(sizeof(cube_vertices));
-    auto const cubeIndicesID = graph.declare_buffer(sizeof(cube_indices));
+    auto const stagingBufferID = graph.declare_buffer(family, sizeof(cube_vertices) + sizeof(cube_indices));
+    auto const cubeVerticesID = graph.declare_buffer(family, sizeof(cube_vertices));
+    auto const cubeIndicesID = graph.declare_buffer(family, sizeof(cube_indices));
 
     graph.associate(stagingBufferID, resources.stagingBuffer.buffer);
     graph.associate(cubeVerticesID, resources.cubeVertices.buffer);
@@ -145,16 +144,15 @@ RenderGraph make_load_graph(
 std::pair<RenderGraph, TextureID> make_draw_graph(
     Graphics const& graphics, Resources const& resources)
 {
+    auto const family = graphics.device.queueFamilyIndex;
+
     RenderGraph graph {
-        graphics.device.device,
-        graphics.device.queueFamilyIndex,
-        graphics.device.queueFamilyIndex,
-        graphics.device.queueFamilyIndex,
+        graphics.device.device, family, family, family
     };
 
-    auto const cubeVerticesID = graph.declare_buffer(sizeof(cube_vertices));
-    auto const cubeIndicesID = graph.declare_buffer(sizeof(cube_indices));
-    auto const swapchainImageID = graph.declare_texture(vk::ImageAspectFlagBits::eColor);
+    auto const cubeVerticesID = graph.declare_buffer(family, sizeof(cube_vertices));
+    auto const cubeIndicesID = graph.declare_buffer(family, sizeof(cube_indices));
+    auto const swapchainImageID = graph.declare_texture(family, vk::ImageAspectFlagBits::eColor);
 
     graph.associate(cubeVerticesID, resources.cubeVertices.buffer);
     graph.associate(cubeIndicesID, resources.cubeIndices.buffer);
