@@ -2,6 +2,7 @@
 #include <caldera-render-graph/graph.h>
 #include <caldera-render-graph/resource.h>
 #include <caldera-render-graph/pass.h>
+#include <caldera-render-graph/scheduler.h>
 
 namespace
 {
@@ -322,17 +323,37 @@ namespace caldera
         return result;
     }
 
+    uint32_t RenderGraph::map_family(QueueType const type) const noexcept
+    {
+        switch (type)
+        {
+        case QueueType::graphics:
+            return m_graphicsFamily;
+
+        case QueueType::transfer:
+            return m_transferFamily;
+
+        case QueueType::compute:
+            return m_computeFamily;
+
+        default:
+            assert(0 && "unreachable");
+            std::abort();
+        }
+    }
+
     RenderGraph::RenderGraph(
         vk::Device const device,
-        uint32_t const graphicsFamily,
-        uint32_t const transferFamily,
-        uint32_t const computeFamily)
+        QueueIndices const& indices,
+        Scheduler& scheduler)
     :
         m_device(device),
 
-        m_graphicsFamily(graphicsFamily),
-        m_transferFamily(transferFamily),
-        m_computeFamily(computeFamily)
+        m_graphicsFamily(indices.graphicsFamily),
+        m_transferFamily(indices.transferFamily),
+        m_computeFamily(indices.computeFamily),
+
+        m_scheduler(&scheduler)
     {}
 
     TextureID RenderGraph::declare_texture(
@@ -470,10 +491,42 @@ namespace caldera
         }
     }
 
-    void RenderGraph::execute(vk::CommandBuffer const cmd)
+    void RenderGraph::execute()
     {
+        uint32_t prevFamily = UINT32_MAX;
+        detail::SubmissionID prevID{ 0, vk::PipelineStageFlagBits2::eNone };
+
+        vk::CommandBuffer buffer = VK_NULL_HANDLE;
+
         for (auto& pass : m_passes)
         {
+            if (auto const currFamily = map_family(pass.m_queueType);
+                prevFamily != currFamily)
+            {
+                if (buffer)
+                {
+                    if (buffer.end() < vk::Result::eSuccess)
+                    {
+                        assert(0 && "failed to end the commamd buffer");
+                        std::abort();
+                    }
+
+                    prevID = m_scheduler->submit_buffer(
+                        pass.m_queueType,
+                        buffer,
+                        vk::PipelineStageFlagBits2::eAllCommands,
+                        std::span{ &prevID, 1 });
+                }
+
+                buffer = m_scheduler->get_buffer(pass.m_queueType);
+                prevFamily = currFamily;
+
+                if (buffer.begin(vk::CommandBufferBeginInfo{}) < vk::Result::eSuccess) {
+                    assert(0 && "failed to begin a command buffer");
+                    std::abort();
+                }
+            }
+
             pass.m_imageBarriers.clear();
             pass.m_bufferBarriers.clear();
 
@@ -512,8 +565,8 @@ namespace caldera
                 pass.m_imageBarriers
             };
 
-            cmd.pipelineBarrier2(dependencyInfo);
-            std::invoke(pass.m_callback, cmd);
+            buffer.pipelineBarrier2(dependencyInfo);
+            std::invoke(pass.m_callback, buffer);
         }
     }
 }

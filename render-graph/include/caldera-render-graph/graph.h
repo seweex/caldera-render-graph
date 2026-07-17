@@ -25,6 +25,9 @@ namespace caldera
             detail::BufferDescription const& description,
             detail::BufferState state) const;
 
+        /// @internal
+        [[nodiscard]] uint32_t map_family(QueueType type) const noexcept;
+
     public:
         /**
          * @param device Vulkan device
@@ -36,9 +39,8 @@ namespace caldera
          */
         RenderGraph(
             vk::Device device,
-            uint32_t graphicsFamily,
-            uint32_t transferFamily,
-            uint32_t computeFamily);
+            QueueIndices const& indices,
+            Scheduler& scheduler);
 
         RenderGraph(RenderGraph&&) noexcept = default;
         RenderGraph& operator=(RenderGraph&&) noexcept = default;
@@ -118,7 +120,7 @@ namespace caldera
          *
          * @note Before calling this method, you need to compile the graph
          */
-        void execute(vk::CommandBuffer cmd);
+        void execute();
 
     private:
         vk::Device m_device;
@@ -126,6 +128,8 @@ namespace caldera
         uint32_t m_graphicsFamily;
         uint32_t m_transferFamily;
         uint32_t m_computeFamily;
+
+        Scheduler* m_scheduler;
 
         std::vector<PassNode> m_passes;
 

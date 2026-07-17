@@ -22,6 +22,7 @@ namespace caldera
     class PassNode;
     class RenderGraph;
 
+    struct QueueIndices;
     class Scheduler;
 }
 
