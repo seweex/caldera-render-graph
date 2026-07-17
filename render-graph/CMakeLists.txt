@@ -1,7 +1,8 @@
 
 add_library(caldera-render-graph STATIC
         src/pass.cpp
-        src/graph.cpp)
+        src/graph.cpp
+        src/scheduler.cpp)
 
 target_include_directories(caldera-render-graph PUBLIC include)
 target_link_libraries(caldera-render-graph PRIVATE

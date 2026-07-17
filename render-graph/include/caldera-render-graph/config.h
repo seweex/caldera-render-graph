@@ -21,6 +21,8 @@ namespace caldera
 
     class PassNode;
     class RenderGraph;
+
+    class Scheduler;
 }
 
 /// @internal
@@ -45,6 +47,8 @@ namespace caldera::detail
 
     struct TextureTransition;
     struct BufferTransition;
+
+    struct SubmissionID;
 }
 
 #endif
